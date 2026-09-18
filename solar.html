@@ -1,0 +1,1934 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<title>منظومه شمسی جامع</title>
+<style>
+  * { box-sizing: border-box; }
+  body { margin: 0; overflow: hidden; background: #000; font-family: Tahoma, sans-serif; }
+  canvas { display: block; }
+  .glass {
+    background: rgba(0,0,0,0.78);
+    border: 1px solid rgba(79,195,247,0.3);
+    backdrop-filter: blur(12px);
+    border-radius: 12px; color: #fff;
+  }
+  #topBar {
+    position: fixed; top: 12px; right: 12px;
+    display: flex; gap: 8px; flex-wrap: wrap;
+    z-index: 100; max-width: 70vw;
+  }
+  #info { padding: 10px 16px; font-size: 13px; line-height: 1.7; }
+  #info b { color: #4fc3f7; }
+  #info small { color: #aaa; font-size: 11px; }
+  #dateBox {
+    padding: 10px 16px; font-size: 12px;
+    color: #4fc3f7; text-align: center; line-height: 1.6;
+  }
+  #dateBox b { color: #fff; display: block; font-size: 14px; }
+  #searchBox {
+    position: fixed; top: 12px; left: 12px;
+    padding: 8px 12px; z-index: 100;
+    display: flex; gap: 8px; align-items: center;
+  }
+  #searchBox input {
+    background: rgba(0,0,0,0.5);
+    border: 1px solid rgba(79,195,247,0.4);
+    color: #fff; padding: 6px 10px;
+    border-radius: 8px; font-family: Tahoma;
+    font-size: 13px; width: 140px; outline: none;
+  }
+  #searchBox input:focus { border-color: #4fc3f7; }
+  button.sm {
+    background: rgba(79,195,247,0.15);
+    color: #4fc3f7; border: 1px solid #4fc3f7;
+    padding: 6px 11px; border-radius: 8px;
+    cursor: pointer; font-family: Tahoma;
+    font-size: 11px; white-space: nowrap;
+    transition: all 0.15s;
+  }
+  button.sm:hover { background: #4fc3f7; color: #000; }
+  button.sm.active { background: #4fc3f7; color: #000; }
+  #timeBar {
+    position: fixed; bottom: 12px; left: 12px;
+    padding: 10px 14px; min-width: 240px;
+    z-index: 100; font-size: 12px;
+  }
+  #timeBar label { color: #4fc3f7; font-weight: bold; }
+  #speedSlider {
+    width: 100%; margin-top: 6px;
+    -webkit-appearance: none; height: 5px;
+    border-radius: 3px; background: rgba(79,195,247,0.3);
+    outline: none;
+  }
+  #speedSlider::-webkit-slider-thumb {
+    -webkit-appearance: none; width: 16px; height: 16px;
+    border-radius: 50%; background: #4fc3f7;
+    cursor: pointer; box-shadow: 0 0 10px #4fc3f7;
+  }
+  #speedValue { color: #4fc3f7; font-weight: bold; }
+  #controls {
+    position: fixed; bottom: 12px; right: 12px;
+    padding: 8px 12px; z-index: 100;
+    display: flex; gap: 6px; flex-wrap: wrap;
+    max-width: 68vw;
+  }
+  .label {
+    color: #fff; font-family: Tahoma, sans-serif;
+    font-size: 12px; font-weight: bold;
+    text-shadow: 0 0 10px rgba(79,195,247,0.9), 0 0 20px rgba(79,195,247,0.5);
+    background: rgba(0,0,0,0.4);
+    padding: 2px 8px; border-radius: 5px;
+    pointer-events: none; white-space: nowrap;
+  }
+  .label.dwarf { color: #bbaaff; font-size: 11px; }
+  .label.moon { color: #88ddff; font-size: 10px; }
+  .label.probe { color: #ffcc44; font-size: 10px; }
+  .label.special { color: #ff88ff; font-size: 11px; }
+  #planetInfo {
+    position: fixed; top: 50%; left: 20px;
+    transform: translateY(-50%) translateX(-120%);
+    width: 320px; max-height: 80vh; overflow-y: auto;
+    background: rgba(10,15,30,0.95);
+    border: 1px solid rgba(79,195,247,0.5);
+    border-radius: 16px; padding: 22px;
+    z-index: 200; backdrop-filter: blur(15px);
+    transition: transform 0.4s cubic-bezier(0.2, 0.9, 0.3, 1);
+    box-shadow: 0 20px 60px rgba(79,195,247,0.2);
+  }
+  #planetInfo.open { transform: translateY(-50%) translateX(0); }
+  #planetInfo .p-header {
+    display: flex; align-items: center; gap: 14px;
+    margin-bottom: 16px; padding-bottom: 14px;
+    border-bottom: 1px solid rgba(79,195,247,0.2);
+  }
+  #planetInfo .p-color {
+    width: 44px; height: 44px; border-radius: 50%;
+    box-shadow: 0 0 20px currentColor; flex-shrink: 0;
+  }
+  #planetInfo .p-name { color: #fff; font-size: 22px; font-weight: bold; }
+  #planetInfo .p-name small {
+    display: block; color: #4fc3f7;
+    font-size: 12px; font-weight: normal; margin-top: 3px;
+  }
+  #planetInfo .p-row {
+    display: flex; justify-content: space-between;
+    padding: 7px 0; color: #ccc; font-size: 12.5px;
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+    gap: 10px;
+  }
+  #planetInfo .p-row:last-child { border-bottom: none; }
+  #planetInfo .p-row .k { color: #888; flex-shrink: 0; }
+  #planetInfo .p-row .v { color: #4fc3f7; font-weight: bold; text-align: left; }
+  #planetInfo .p-fact {
+    margin-top: 12px; padding: 10px 14px;
+    background: rgba(79,195,247,0.08);
+    border-left: 3px solid #4fc3f7;
+    border-radius: 8px; font-size: 12px;
+    color: #aaccee; line-height: 1.8;
+  }
+  #planetInfo .p-buttons { display: flex; gap: 8px; margin-top: 14px; }
+  #planetInfo .p-buttons button {
+    flex: 1; padding: 8px 12px;
+    background: rgba(79,195,247,0.15);
+    color: #4fc3f7; border: 1px solid #4fc3f7;
+    border-radius: 8px; cursor: pointer;
+    font-family: Tahoma; font-size: 12px;
+  }
+  #planetInfo .p-buttons button:hover { background: #4fc3f7; color: #000; }
+  #planetInfo .p-buttons button.active { background: #4fc3f7; color: #000; }
+  #planetInfo .p-close {
+    position: absolute; top: 12px; left: 12px;
+    width: 30px; height: 30px; border-radius: 8px;
+    background: rgba(255,80,80,0.2);
+    color: #ff5050; border: 1px solid #ff5050;
+    cursor: pointer; font-size: 15px;
+    display: flex; align-items: center; justify-content: center;
+  }
+  #planetInfo .p-close:hover { background: #ff5050; color: #000; }
+  #hint {
+    position: fixed; bottom: 12px; left: 50%;
+    transform: translateX(-50%);
+    color: #888; font-size: 11px;
+    background: rgba(0,0,0,0.6);
+    padding: 6px 12px; border-radius: 8px;
+    border: 1px solid rgba(79,195,247,0.15);
+    z-index: 99; pointer-events: none;
+  }
+  #hint b { color: #4fc3f7; }
+  #achievements {
+    position: fixed; top: 12px; right: 12px;
+    width: 220px; padding: 12px 16px;
+    z-index: 150; font-size: 12px; display: none;
+  }
+  #achievements.open { display: block; }
+  #achievements h3 {
+    color: #ffcc44; font-size: 14px;
+    margin: 0 0 10px;
+    display: flex; justify-content: space-between;
+  }
+  #achievements .ach {
+    padding: 6px 10px; margin: 4px 0;
+    background: rgba(255,204,68,0.1);
+    border-left: 3px solid #ffcc44;
+    border-radius: 6px;
+    color: #ffdd88; font-size: 11px;
+  }
+  #achievements .ach.locked { opacity: 0.3; border-left-color: #666; color: #888; }
+  .ach-toast {
+    position: fixed; top: 80px; left: 50%;
+    transform: translateX(-50%);
+    background: linear-gradient(135deg, #ffcc44, #ff9900);
+    color: #000; padding: 14px 28px;
+    border-radius: 12px; font-weight: bold; font-size: 15px;
+    box-shadow: 0 10px 40px rgba(255,204,68,0.5);
+    z-index: 300;
+    animation: achIn 0.5s ease, achOut 0.5s ease 3s forwards;
+    pointer-events: none;
+  }
+  @keyframes achIn { from { opacity: 0; transform: translateX(-50%) translateY(-30px) scale(0.8); } }
+  @keyframes achOut { to { opacity: 0; transform: translateX(-50%) translateY(-30px); } }
+  #sizeCompare {
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,0.9);
+    z-index: 250; display: none;
+    padding: 40px; overflow-y: auto;
+  }
+  #sizeCompare.open { display: block; }
+  #sizeCompare h2 { color: #4fc3f7; text-align: center; font-size: 22px; margin-bottom: 30px; }
+  #sizeCompare .row {
+    display: flex; align-items: flex-end;
+    justify-content: center; gap: 40px;
+    flex-wrap: wrap; margin-bottom: 30px;
+    padding: 20px; border-bottom: 1px solid rgba(79,195,247,0.2);
+  }
+  #sizeCompare .body { text-align: center; color: #fff; }
+  #sizeCompare .circle {
+    border-radius: 50%; margin: 0 auto 10px;
+    box-shadow: 0 0 30px currentColor;
+  }
+  #sizeCompare .name { font-size: 13px; font-weight: bold; }
+  #sizeCompare .dim { font-size: 10px; color: #888; margin-top: 3px; }
+  .modal-close {
+    position: fixed; top: 20px; right: 20px;
+    width: 40px; height: 40px;
+    background: rgba(255,80,80,0.2);
+    color: #ff5050; border: 1px solid #ff5050;
+    border-radius: 10px; cursor: pointer; font-size: 20px;
+    z-index: 260;
+  }
+  #quiz {
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,0.92);
+    z-index: 250; display: none;
+    align-items: center; justify-content: center;
+    padding: 20px;
+  }
+  #quiz.open { display: flex; }
+  .quiz-box {
+    width: min(520px, 100%);
+    background: rgba(10,15,30,0.98);
+    border: 1px solid rgba(79,195,247,0.5);
+    border-radius: 20px; padding: 30px;
+    box-shadow: 0 20px 80px rgba(79,195,247,0.3);
+  }
+  .quiz-box h2 { color: #4fc3f7; margin: 0 0 20px; font-size: 20px; }
+  .quiz-q { color: #fff; font-size: 16px; margin-bottom: 18px; line-height: 1.7; }
+  .quiz-opt {
+    display: block; width: 100%;
+    padding: 12px 18px; margin-bottom: 10px;
+    background: rgba(79,195,247,0.1);
+    color: #fff; border: 1px solid rgba(79,195,247,0.3);
+    border-radius: 10px; cursor: pointer;
+    font-family: Tahoma; font-size: 14px;
+    text-align: right; transition: all 0.15s;
+  }
+  .quiz-opt:hover { background: rgba(79,195,247,0.25); }
+  .quiz-opt.correct { background: rgba(80,255,120,0.3); border-color: #50ff78; }
+  .quiz-opt.wrong { background: rgba(255,80,80,0.3); border-color: #ff5050; }
+  .quiz-progress { color: #888; font-size: 12px; margin-top: 12px; }
+  .quiz-result { color: #ffcc44; font-size: 18px; text-align: center; line-height: 1.8; }
+  #timeTravel {
+    position: fixed; top: 60px; left: 12px;
+    padding: 12px 16px; z-index: 150;
+    display: none; min-width: 240px;
+  }
+  #timeTravel.open { display: block; }
+  #timeTravel label { color: #4fc3f7; font-weight: bold; font-size: 12px; }
+  #timeTravel input {
+    width: 100%; margin-top: 8px;
+    padding: 6px 10px;
+    background: rgba(0,0,0,0.5);
+    border: 1px solid rgba(79,195,247,0.4);
+    color: #fff; border-radius: 8px;
+    font-family: Tahoma; font-size: 12px;
+  }
+  #timeTravel .presets {
+    display: flex; gap: 6px; flex-wrap: wrap;
+    margin-top: 10px;
+  }
+  .tour-banner {
+    position: fixed; top: 70px; left: 50%;
+    transform: translateX(-50%);
+    background: rgba(79,195,247,0.9);
+    color: #000; padding: 10px 24px;
+    border-radius: 10px; font-weight: bold;
+    z-index: 150; font-size: 14px;
+    display: none;
+    box-shadow: 0 8px 30px rgba(79,195,247,0.4);
+  }
+  .tour-banner.open { display: block; }
+  .tour-banner button {
+    margin-right: 12px; padding: 4px 10px;
+    background: rgba(0,0,0,0.3); color: #fff;
+    border: none; border-radius: 6px;
+    cursor: pointer; font-size: 12px;
+    font-family: Tahoma;
+  }
+  ::-webkit-scrollbar { width: 6px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: rgba(79,195,247,0.4); border-radius: 3px; }
+</style>
+</head>
+<body>
+
+<div id="topBar">
+  <div id="info" class="glass">
+    🌌 <b>منظومه شمسی</b><br>
+    <small>🖱️ بکش: چرخش | 🎡 اسکرول: زوم | 👆 کلیک: اطلاعات</small>
+  </div>
+  <div id="dateBox" class="glass">
+    <b id="dateVal"></b>
+    <span id="timeVal"></span>
+  </div>
+</div>
+
+<div id="searchBox" class="glass">
+  <input id="searchInput" placeholder="جستجو...">
+  <button class="sm" id="searchBtn">🔍</button>
+</div>
+
+<div id="timeTravel" class="glass">
+  <label>⏰ سفر در زمان</label>
+  <input id="yearInput" type="number" value="2026" min="1900" max="2200">
+  <div class="presets">
+    <button class="sm" data-year="1969">۱۹۶۹ آپولو</button>
+    <button class="sm" data-year="1977">۱۹۷۷ وویجر</button>
+    <button class="sm" data-year="2026">اکنون</button>
+    <button class="sm" data-year="2061">۲۰۶۱ هالی</button>
+  </div>
+</div>
+
+<div id="achievements" class="glass">
+  <h3>🏆 دستاوردها <span id="achCount">0/10</span></h3>
+  <div id="achList"></div>
+</div>
+
+<div class="tour-banner" id="tourBanner">
+  <span id="tourText"></span>
+  <button id="tourStop">توقف</button>
+</div>
+
+<div id="timeBar" class="glass">
+  <label>⏱️ سرعت: <span id="speedValue">1.0x</span></label>
+  <input type="range" id="speedSlider" min="0" max="50" value="10">
+</div>
+
+<div id="controls">
+  <button class="sm" id="btnLabels">📝 نام‌ها</button>
+  <button class="sm" id="btnOrbits">⭕ مدارها</button>
+  <button class="sm" id="btnConstellations">✨ فلکی</button>
+  <button class="sm" id="btnTrails">💫 دنباله</button>
+  <button class="sm" id="btnSound">🔊 صدا</button>
+  <button class="sm" id="btnTour">🎥 تور</button>
+  <button class="sm" id="btnTravel">⏰ زمان</button>
+  <button class="sm" id="btnCompare">📏 اندازه</button>
+  <button class="sm" id="btnQuiz">🎓 آزمون</button>
+  <button class="sm" id="btnShot">📸 عکس</button>
+  <button class="sm" id="btnSunView">☀️ خورشید</button>
+  <button class="sm" id="btnAch">🏆</button>
+  <button class="sm" id="btnReset">🔄</button>
+</div>
+
+<div id="hint">💡 روی هر جرم <b>کلیک کن</b> — دوربین پرواز می‌کنه سمتش</div>
+
+<div id="planetInfo">
+  <button class="p-close" id="piClose">✕</button>
+  <div class="p-header">
+    <div class="p-color" id="piColor"></div>
+    <div class="p-name">
+      <span id="piName"></span>
+      <small id="piEnglish"></small>
+    </div>
+  </div>
+  <div class="p-row"><span class="k">قطر</span><span class="v" id="piDiameter"></span></div>
+  <div class="p-row"><span class="k">فاصله از خورشید</span><span class="v" id="piDistance"></span></div>
+  <div class="p-row"><span class="k">مدت یک سال</span><span class="v" id="piYear"></span></div>
+  <div class="p-row"><span class="k">مدت یک روز</span><span class="v" id="piDay"></span></div>
+  <div class="p-row"><span class="k">تعداد قمرها</span><span class="v" id="piMoons"></span></div>
+  <div class="p-row"><span class="k">دما</span><span class="v" id="piTemp"></span></div>
+  <div class="p-fact" id="piFact"></div>
+  <div class="p-buttons">
+    <button id="piFollow">🎯 دنبال کن</button>
+    <button id="piZoom">🔍 نزدیک شو</button>
+  </div>
+</div>
+
+<div id="sizeCompare">
+  <button class="modal-close" id="scClose">✕</button>
+  <h2>📏 مقایسه اندازه اجرام</h2>
+  <div id="scContent"></div>
+</div>
+
+<div id="quiz">
+  <button class="modal-close" id="quizClose">✕</button>
+  <div class="quiz-box" id="quizBox"></div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/renderers/CSS2DRenderer.js"></script>
+<script>
+'use strict';
+
+// ============================================================
+//   داده‌ها
+// ============================================================
+const PLANETS = [
+  { name:'عطارد', en:'Mercury', color:0xa8a8a8, glow:0xdddddd, size:0.38, dist:6, speed:0.025, tilt:0.01, realR:2440,
+    diameter:'۴,۸۷۹ کیلومتر', distance:'۵۷.۹ م.ک', year:'۸۸ روز', day:'۵۹ روز', moons:'۰', temp:'−۱۷۳ تا ۴۲۷°',
+    fact:'کوچک‌ترین سیاره و نزدیک‌ترین به خورشیده.' },
+  { name:'زهره', en:'Venus', color:0xe8b970, glow:0xffd99a, size:0.55, dist:8.5, speed:0.018, tilt:0.02, realR:6052,
+    diameter:'۱۲,۱۰۴ کیلومتر', distance:'۱۰۸.۲ م.ک', year:'۲۲۵ روز', day:'۲۴۳ روز', moons:'۰', temp:'۴۶۴°',
+    fact:'داغ‌ترین سیاره، ابرهای اسیدی داره.' },
+  { name:'زمین', en:'Earth', color:0x2a6fc4, glow:0x4fa3f7, size:0.6, dist:11.5, speed:0.014, tilt:0.41, realR:6371,
+    diameter:'۱۲,۷۴۲ کیلومتر', distance:'۱۴۹.۶ م.ک', year:'۳۶۵.۲۵ روز', day:'۲۴ ساعت', moons:'۱', temp:'−۸۸ تا ۵۸°',
+    fact:'تنها سیاره‌ای که می‌دونیم حیات داره. ۷۱٪ آب.' },
+  { name:'مریخ', en:'Mars', color:0xb0432c, glow:0xe85a3a, size:0.45, dist:14.5, speed:0.011, tilt:0.44, realR:3389,
+    diameter:'۶,۷۷۹ کیلومتر', distance:'۲۲۷.۹ م.ک', year:'۶۸۷ روز', day:'۲۴.۶ ساعت', moons:'۲', temp:'−۱۵۳ تا ۲۰°',
+    fact:'بلندترین کوه منظومه، المپوس مونس (۲۲ km).' },
+  { name:'مشتری', en:'Jupiter', color:0xc08a52, glow:0xe0a878, size:1.6, dist:20, speed:0.007, tilt:0.05, realR:69911,
+    diameter:'۱۳۹,۸۲۰ کیلومتر', distance:'۷۷۸.۵ م.ک', year:'۱۱.۹ سال', day:'۹.۹ ساعت', moons:'۹۵', temp:'−۱۴۵°',
+    fact:'بزرگ‌ترین سیاره. لکه‌ی سرخ بزرگش طوفانی عظیمه.' },
+  { name:'زحل', en:'Saturn', color:0xd4b070, glow:0xf0d090, size:1.4, dist:27, speed:0.005, tilt:0.47, realR:58232,
+    diameter:'۱۱۶,۴۶۰ کیلومتر', distance:'۱.۴۳ میلیارد', year:'۲۹.۵ سال', day:'۱۰.۷ ساعت', moons:'۱۴۶', temp:'−۱۷۸°',
+    fact:'حلقه‌هاش از یخ و سنگ. سبک‌تر از آب!' },
+  { name:'اورانوس', en:'Uranus', color:0x6ec8d8, glow:0x9ee0e8, size:0.9, dist:33, speed:0.0035, tilt:1.71, realR:25362,
+    diameter:'۵۰,۷۲۴ کیلومتر', distance:'۲.۸۷ میلیارد', year:'۸۴ سال', day:'۱۷.۲ ساعت', moons:'۲۸', temp:'−۲۲۴°',
+    fact:'روی پهلو می‌چرخه! محورش ۹۸ درجه کجه.' },
+  { name:'نپتون', en:'Neptune', color:0x3050b0, glow:0x5070d0, size:0.88, dist:38, speed:0.0025, tilt:0.49, realR:24622,
+    diameter:'۴۹,۲۴۴ کیلومتر', distance:'۴.۵ میلیارد', year:'۱۶۵ سال', day:'۱۶.۱ ساعت', moons:'۱۶', temp:'−۲۱۴°',
+    fact:'بادهایی با سرعت ۲,۱۰۰ km/h — سریع‌ترین.' }
+];
+
+const DWARFS = [
+  { name:'سرس', en:'Ceres', color:0x998877, glow:0xbbaa99, size:0.25, dist:17, speed:0.009, tilt:0.1, realR:470,
+    diameter:'۹۳۹ کیلومتر', distance:'۴۱۳ م.ک', year:'۴.۶ سال', day:'۹ ساعت', moons:'۰', temp:'−۱۰۵°',
+    fact:'بزرگ‌ترین جسم کمربند سیارک‌هاست.' },
+  { name:'پلوتو', en:'Pluto', color:0xc8b8a0, glow:0xe8d8c0, size:0.22, dist:44, speed:0.0018, tilt:2.0, realR:1188,
+    diameter:'۲,۳۷۷ کیلومتر', distance:'۵.۹ میلیارد', year:'۲۴۸ سال', day:'۶.۴ روز', moons:'۵', temp:'−۲۲۹°',
+    fact:'در ۲۰۰۶ از سیاره به سیاره کوتوله تغییر رده داد.' }
+];
+
+const FAMOUS_MOONS = [
+  { name:'ماه', parent:'زمین', color:0xbbbbbb, size:0.16, dist:1.2, speed:0.05 },
+  { name:'فوبوس', parent:'مریخ', color:0x998877, size:0.09, dist:0.9, speed:0.08 },
+  { name:'اروپا', parent:'مشتری', color:0xddddcc, size:0.15, dist:2.4, speed:0.04 },
+  { name:'آیو', parent:'مشتری', color:0xffdd66, size:0.14, dist:2.0, speed:0.055 },
+  { name:'گانیمد', parent:'مشتری', color:0xaa9988, size:0.18, dist:2.8, speed:0.03 },
+  { name:'تیتان', parent:'زحل', color:0xdd9944, size:0.18, dist:2.5, speed:0.035 }
+];
+
+// ============================================================
+//   صحنه
+// ============================================================
+const scene = new THREE.Scene();
+const camera = new THREE.PerspectiveCamera(60, innerWidth/innerHeight, 0.1, 12000);
+const renderer = new THREE.WebGLRenderer({ antialias: true, preserveDrawingBuffer: true });
+renderer.setSize(innerWidth, innerHeight);
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+document.body.appendChild(renderer.domElement);
+
+const labelRenderer = new THREE.CSS2DRenderer();
+labelRenderer.setSize(innerWidth, innerHeight);
+labelRenderer.domElement.style.position = 'absolute';
+labelRenderer.domElement.style.top = '0';
+labelRenderer.domElement.style.pointerEvents = 'none';
+document.body.appendChild(labelRenderer.domElement);
+
+const raycaster = new THREE.Raycaster();
+const mouseNDC = new THREE.Vector2();
+
+scene.add(new THREE.AmbientLight(0xffffff, 0.35));
+const sunLight = new THREE.PointLight(0xffffee, 3.5, 0, 1.3);
+scene.add(sunLight);
+
+// ============================================================
+//   بافت‌ها
+// ============================================================
+function makeTexture(baseColor, glowColor, type) {
+  const c = document.createElement('canvas');
+  c.width = 512; c.height = 512;
+  const x = c.getContext('2d');
+  x.fillStyle = '#' + baseColor.toString(16).padStart(6, '0');
+  x.fillRect(0, 0, 512, 512);
+  if (type === 'earth') {
+    x.fillStyle = '#1a4a1a';
+    [[80,150,60,40],[200,120,80,50],[320,180,70,45],[150,280,90,60],
+     [350,300,60,40],[420,200,50,30],[90,350,70,50],[250,400,80,40]]
+    .forEach(([px,py,w,h]) => { x.beginPath(); x.ellipse(px,py,w,h,Math.random()*Math.PI,0,Math.PI*2); x.fill(); });
+    x.fillStyle = 'rgba(255,255,255,0.35)';
+    for (let i = 0; i < 25; i++) {
+      x.beginPath();
+      x.ellipse(Math.random()*512, Math.random()*512, 20+Math.random()*40, 10+Math.random()*15, Math.random()*Math.PI, 0, Math.PI*2);
+      x.fill();
+    }
+  } else if (type === 'jupiter' || type === 'saturn') {
+    const stripes = type === 'jupiter' ? 16 : 12;
+    for (let i = 0; i < stripes; i++) {
+      const y = (i/stripes)*512, h = 512/stripes;
+      x.fillStyle = `rgba(255,220,180,${Math.abs(Math.sin(i*1.3)*0.15 + 0.05)})`;
+      x.fillRect(0, y, 512, h);
+    }
+    if (type === 'jupiter') {
+      x.fillStyle = 'rgba(200,80,60,0.85)';
+      x.beginPath(); x.ellipse(350, 300, 45, 28, 0, 0, Math.PI*2); x.fill();
+    }
+  } else if (type === 'mars') {
+    x.fillStyle = 'rgba(120,50,30,0.6)';
+    for (let i = 0; i < 35; i++) {
+      x.beginPath();
+      x.ellipse(Math.random()*512, Math.random()*512, 10+Math.random()*40, 8+Math.random()*20, Math.random()*Math.PI, 0, Math.PI*2);
+      x.fill();
+    }
+    x.fillStyle = 'rgba(255,255,255,0.7)';
+    x.fillRect(0, 0, 512, 30); x.fillRect(0, 482, 512, 30);
+  } else if (type === 'venus') {
+    x.fillStyle = 'rgba(255,240,200,0.4)';
+    for (let i = 0; i < 45; i++) {
+      x.beginPath();
+      x.ellipse(Math.random()*512, Math.random()*512, 20+Math.random()*50, 10+Math.random()*20, Math.random()*Math.PI, 0, Math.PI*2);
+      x.fill();
+    }
+  } else {
+    for (let i = 0; i < 30; i++) {
+      x.fillStyle = `rgba(0,0,0,${0.05 + Math.random()*0.15})`;
+      x.beginPath();
+      x.ellipse(Math.random()*512, Math.random()*512, 10+Math.random()*40, 8+Math.random()*25, Math.random()*Math.PI, 0, Math.PI*2);
+      x.fill();
+    }
+  }
+  const t = new THREE.CanvasTexture(c);
+  t.anisotropy = 8;
+  return t;
+}
+
+function makeSunTexture() {
+  const c = document.createElement('canvas');
+  c.width = 512; c.height = 512;
+  const x = c.getContext('2d');
+  const g = x.createRadialGradient(256, 256, 0, 256, 256, 256);
+  g.addColorStop(0, '#fff5a0'); g.addColorStop(0.5, '#ffcc33'); g.addColorStop(1, '#ff8800');
+  x.fillStyle = g; x.fillRect(0, 0, 512, 512);
+  for (let i = 0; i < 70; i++) {
+    x.fillStyle = `rgba(255,150,0,${0.2+Math.random()*0.4})`;
+    x.beginPath();
+    x.ellipse(Math.random()*512, Math.random()*512, 10+Math.random()*40, 10+Math.random()*30, Math.random()*Math.PI, 0, Math.PI*2);
+    x.fill();
+  }
+  const t = new THREE.CanvasTexture(c);
+  t.anisotropy = 8;
+  return t;
+}
+
+// ============================================================
+//   پس‌زمینه
+// ============================================================
+function createMilkyWay() {
+  const count = 10000;
+  const pos = new Float32Array(count * 3);
+  const col = new Float32Array(count * 3);
+  for (let i = 0; i < count; i++) {
+    const r = 800 + Math.random() * 1500;
+    const theta = Math.random() * Math.PI * 2;
+    const y = (Math.random() - 0.5) * 200 * Math.exp(-r/2000);
+    pos[i*3] = r * Math.cos(theta); pos[i*3+1] = y * 0.4; pos[i*3+2] = r * Math.sin(theta) * 0.7;
+    const t = Math.random();
+    let cr, cg, cb;
+    if (t < 0.4) { cr=0.85; cg=0.8; cb=1.0; }
+    else if (t < 0.7) { cr=1.0; cg=0.9; cb=0.75; }
+    else { cr=0.9; cg=0.95; cb=1.0; }
+    col[i*3]=cr; col[i*3+1]=cg; col[i*3+2]=cb;
+  }
+  const geo = new THREE.BufferGeometry();
+  geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+  geo.setAttribute('color', new THREE.BufferAttribute(col, 3));
+  scene.add(new THREE.Points(geo, new THREE.PointsMaterial({
+    size: 2.5, vertexColors: true, transparent: true, opacity: 0.55, sizeAttenuation: true, depthWrite: false
+  })));
+}
+
+function createStars() {
+  const count = 8000;
+  const pos = new Float32Array(count * 3);
+  for (let i = 0; i < count; i++) {
+    const r = 300 + Math.random() * 700;
+    const th = Math.random() * Math.PI * 2;
+    const ph = Math.acos((Math.random() * 2) - 1);
+    pos[i*3] = r * Math.sin(ph) * Math.cos(th);
+    pos[i*3+1] = r * Math.cos(ph);
+    pos[i*3+2] = r * Math.sin(ph) * Math.sin(th);
+  }
+  const geo = new THREE.BufferGeometry();
+  geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+  scene.add(new THREE.Points(geo, new THREE.PointsMaterial({
+    color: 0xffffff, size: 0.6, transparent: true, opacity: 0.9
+  })));
+}
+
+function createNebula() {
+  [0xff44aa, 0x44aaff, 0xaa44ff, 0xff6644].forEach(color => {
+    const count = 800;
+    const pos = new Float32Array(count * 3);
+    const bx = (Math.random() - 0.5) * 3000, by = (Math.random() - 0.5) * 1500, bz = (Math.random() - 0.5) * 3000;
+    for (let i = 0; i < count; i++) {
+      const r = Math.random() * 400;
+      const th = Math.random() * Math.PI * 2;
+      const ph = Math.acos((Math.random() * 2) - 1);
+      pos[i*3] = bx + r * Math.sin(ph) * Math.cos(th);
+      pos[i*3+1] = by + r * Math.cos(ph);
+      pos[i*3+2] = bz + r * Math.sin(ph) * Math.sin(th);
+    }
+    const geo = new THREE.BufferGeometry();
+    geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+    scene.add(new THREE.Points(geo, new THREE.PointsMaterial({
+      color, size: 8, transparent: true, opacity: 0.08,
+      sizeAttenuation: true, depthWrite: false, blending: THREE.AdditiveBlending
+    })));
+  });
+}
+
+function createConstellations() {
+  const group = new THREE.Group();
+  scene.add(group);
+  const constellations = [
+    { stars: [[-40,40,-60],[-30,42,-62],[-20,44,-64],[-10,45,-65],[-2,44,-64],[4,42,-62],[6,40,-60]] },
+    { stars: [[-20,30,50],[-15,32,50],[-10,34,50],[-15,29,50],[-12,27,50],[-8,25,50],[-18,25,50]] },
+    { stars: [[60,35,40],[55,38,42],[50,40,44],[45,42,42],[42,40,38]] },
+    { stars: [[30,45,-70],[35,46,-72],[40,48,-73],[44,49,-73],[48,48,-72],[50,46,-70],[50,44,-68]] }
+  ];
+  constellations.forEach(c => {
+    const pts = c.stars.map(s => new THREE.Vector3(...s));
+    group.add(new THREE.Line(
+      new THREE.BufferGeometry().setFromPoints(pts),
+      new THREE.LineBasicMaterial({ color: 0x88ccff, transparent: true, opacity: 0.6 })
+    ));
+    pts.forEach(p => {
+      const star = new THREE.Mesh(
+        new THREE.SphereGeometry(0.3, 8, 8),
+        new THREE.MeshBasicMaterial({ color: 0xffffff })
+      );
+      star.position.copy(p);
+      group.add(star);
+    });
+  });
+  group.visible = false;
+  return group;
+}
+let constellationGroup;
+
+// ============================================================
+//   خورشید
+// ============================================================
+let sun, sunGlow;
+function createSun() {
+  sun = new THREE.Mesh(
+    new THREE.SphereGeometry(3.5, 64, 64),
+    new THREE.MeshBasicMaterial({ map: makeSunTexture() })
+  );
+  sun.userData = {
+    isSun: true, name: 'خورشید',
+    info: {
+      name:'خورشید', en:'Sun', color:0xffcc00,
+      diameter:'۱,۳۹۲,۷۰۰ کیلومتر', distance:'مرکز منظومه',
+      year:'—', day:'۲۵ روز', moons:'۸ سیاره', temp:'۵,۵۰۰°',
+      fact:'۹۹.۸۶٪ جرم منظومه شمسی رو خورشید تشکیل می‌ده.'
+    }
+  };
+  scene.add(sun);
+  sunGlow = new THREE.Mesh(
+    new THREE.SphereGeometry(4.3, 32, 32),
+    new THREE.MeshBasicMaterial({ color: 0xffaa00, transparent: true, opacity: 0.2 })
+  );
+  scene.add(sunGlow);
+  const g2 = new THREE.Mesh(
+    new THREE.SphereGeometry(5.2, 32, 32),
+    new THREE.MeshBasicMaterial({ color: 0xff8800, transparent: true, opacity: 0.1 })
+  );
+  scene.add(g2);
+  sunGlow.userData.glow2 = g2;
+}
+
+// ============================================================
+//   سیارات
+// ============================================================
+const clickables = [];
+const orbitLines = [];
+const labelDivs = [];
+const trailLines = [];
+
+function createPlanets() {
+  [...PLANETS, ...DWARFS].forEach(data => {
+    const pts = [];
+    for (let i = 0; i <= 200; i++) {
+      const a = (i/200) * Math.PI * 2;
+      pts.push(new THREE.Vector3(Math.cos(a)*data.dist, 0, Math.sin(a)*data.dist));
+    }
+    const orbit = new THREE.Line(
+      new THREE.BufferGeometry().setFromPoints(pts),
+      new THREE.LineBasicMaterial({ color: 0x4477aa, transparent: true, opacity: 0.3 })
+    );
+    scene.add(orbit);
+    orbitLines.push(orbit);
+
+    const tex = makeTexture(data.color, data.glow, data.en.toLowerCase());
+    const mesh = new THREE.Mesh(
+      new THREE.SphereGeometry(data.size, 48, 48),
+      new THREE.MeshStandardMaterial({
+        map: tex, roughness: 0.9, metalness: 0.05,
+        emissive: data.color, emissiveIntensity: 0.1
+      })
+    );
+    const baseAngle = Math.random() * Math.PI * 2;
+    mesh.userData = {
+      ...data, baseAngle: baseAngle, angle: baseAngle,
+      isPlanet: true, isDwarf: DWARFS.includes(data),
+      moonMeshes: [],
+      info: {
+        name: data.name, en: data.en, color: data.color,
+        diameter: data.diameter, distance: data.distance,
+        year: data.year, day: data.day, moons: data.moons,
+        temp: data.temp, fact: data.fact
+      }
+    };
+    mesh.rotation.z = data.tilt;
+    scene.add(mesh);
+    clickables.push(mesh);
+
+    if (data.en === 'Saturn') {
+      const c = document.createElement('canvas');
+      c.width = 512; c.height = 64;
+      const cx = c.getContext('2d');
+      for (let i = 0; i < 512; i++) {
+        cx.fillStyle = `rgba(220,190,130,${0.3 + Math.sin(i*0.1)*0.3 + Math.random()*0.2})`;
+        cx.fillRect(i, 0, 1, 64);
+      }
+      const ring = new THREE.Mesh(
+        new THREE.RingGeometry(data.size*1.3, data.size*2.2, 128),
+        new THREE.MeshBasicMaterial({ map: new THREE.CanvasTexture(c), side: THREE.DoubleSide, transparent: true, opacity: 0.85 })
+      );
+      ring.rotation.x = Math.PI/2 + 0.3;
+      mesh.add(ring);
+    }
+
+    const trailGeo = new THREE.BufferGeometry();
+    trailGeo.setAttribute('position', new THREE.BufferAttribute(new Float32Array(300 * 3), 3));
+    const trail = new THREE.Line(trailGeo, new THREE.LineBasicMaterial({
+      color: data.glow, transparent: true, opacity: 0.6
+    }));
+    trail.visible = false;
+    trail.userData.positions = [];
+    scene.add(trail);
+    trailLines.push(trail);
+    mesh.userData.trail = trail;
+
+    const div = document.createElement('div');
+    div.className = 'label' + (DWARFS.includes(data) ? ' dwarf' : '');
+    div.textContent = data.name;
+    const label = new THREE.CSS2DObject(div);
+    label.position.set(0, data.size + 0.6, 0);
+    mesh.add(label);
+    labelDivs.push(div);
+  });
+}
+
+function createMoons() {
+  FAMOUS_MOONS.forEach(m => {
+    const parentMesh = clickables.find(p => p.userData.name === m.parent);
+    if (!parentMesh) return;
+    const moon = new THREE.Mesh(
+      new THREE.SphereGeometry(m.size, 24, 24),
+      new THREE.MeshStandardMaterial({ map: makeTexture(m.color, 0xffffff, 'moon'), roughness: 0.9 })
+    );
+    moon.userData = { angle: Math.random()*Math.PI*2, speed: m.speed, dist: m.dist, name: m.name, isMoon: true };
+    parentMesh.add(moon);
+    parentMesh.userData.moonMeshes.push(moon);
+    const div = document.createElement('div');
+    div.className = 'label moon';
+    div.textContent = m.name;
+    const label = new THREE.CSS2DObject(div);
+    label.position.set(0, m.size + 0.25, 0);
+    moon.add(label);
+    labelDivs.push(div);
+  });
+}
+
+// ============================================================
+//   کمربندها
+// ============================================================
+function createAsteroidBelt() {
+  const count = 2200;
+  const pos = new Float32Array(count * 3);
+  for (let i = 0; i < count; i++) {
+    const r = 16 + Math.random() * 3;
+    const theta = Math.random() * Math.PI * 2;
+    pos[i*3] = r * Math.cos(theta);
+    pos[i*3+1] = (Math.random() - 0.5) * 0.6;
+    pos[i*3+2] = r * Math.sin(theta);
+  }
+  const geo = new THREE.BufferGeometry();
+  geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+  scene.add(new THREE.Points(geo, new THREE.PointsMaterial({ color: 0x887766, size: 0.09, transparent: true, opacity: 0.85 })));
+}
+
+function createKuiperBelt() {
+  const count = 2500;
+  const pos = new Float32Array(count * 3);
+  for (let i = 0; i < count; i++) {
+    const r = 42 + Math.random() * 8;
+    const theta = Math.random() * Math.PI * 2;
+    pos[i*3] = r * Math.cos(theta);
+    pos[i*3+1] = (Math.random() - 0.5) * 2;
+    pos[i*3+2] = r * Math.sin(theta);
+  }
+  const geo = new THREE.BufferGeometry();
+  geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+  scene.add(new THREE.Points(geo, new THREE.PointsMaterial({ color: 0x88aacc, size: 0.12, transparent: true, opacity: 0.6 })));
+}
+
+function createOortCloud() {
+  const count = 4000;
+  const pos = new Float32Array(count * 3);
+  for (let i = 0; i < count; i++) {
+    const r = 100 + Math.random() * 200;
+    const th = Math.random() * Math.PI * 2;
+    const ph = Math.acos((Math.random() * 2) - 1);
+    pos[i*3] = r * Math.sin(ph) * Math.cos(th);
+    pos[i*3+1] = r * Math.cos(ph);
+    pos[i*3+2] = r * Math.sin(ph) * Math.sin(th);
+  }
+  const geo = new THREE.BufferGeometry();
+  geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+  scene.add(new THREE.Points(geo, new THREE.PointsMaterial({ color: 0xaaccee, size: 0.3, transparent: true, opacity: 0.35 })));
+}
+
+// ============================================================
+//   سیاه‌چاله
+// ============================================================
+let accretionDisk;
+function createBlackHole() {
+  const group = new THREE.Group();
+  group.position.set(-120, 30, -100);
+
+  const bh = new THREE.Mesh(
+    new THREE.SphereGeometry(3, 32, 32),
+    new THREE.MeshBasicMaterial({ color: 0x000000 })
+  );
+  group.add(bh);
+
+  const halo = new THREE.Mesh(
+    new THREE.RingGeometry(3, 4.5, 64),
+    new THREE.MeshBasicMaterial({
+      color: 0xff6600, side: THREE.DoubleSide,
+      transparent: true, opacity: 0.7, blending: THREE.AdditiveBlending
+    })
+  );
+  halo.rotation.x = Math.PI / 2.5;
+  group.add(halo);
+
+  const c = document.createElement('canvas');
+  c.width = 512; c.height = 128;
+  const cx = c.getContext('2d');
+  for (let i = 0; i < 512; i++) {
+    const f = i / 512;
+    const a = Math.max(0, Math.sin(f * 20) * 0.4 + 0.4);
+    cx.fillStyle = `rgba(255,${Math.floor(80 + f * 150)},${Math.floor(20 + f * 60)},${a})`;
+    cx.fillRect(i, 0, 1, 128);
+  }
+  accretionDisk = new THREE.Mesh(
+    new THREE.RingGeometry(4.5, 12, 128),
+    new THREE.MeshBasicMaterial({
+      map: new THREE.CanvasTexture(c), side: THREE.DoubleSide,
+      transparent: true, opacity: 0.85, blending: THREE.AdditiveBlending
+    })
+  );
+  accretionDisk.rotation.x = Math.PI / 2.5;
+  group.add(accretionDisk);
+
+  group.userData = {
+    name: 'سیاه‌چاله', isBlackHole: true,
+    info: {
+      name:'سیاه‌چاله', en:'Black Hole', color:0xff6600,
+      diameter:'افق رویداد', distance:'خیلی دور',
+      year:'—', day:'—', moons:'—', temp:'بی‌نهایت',
+      fact:'جاذبه‌اش آنقدر قویه که حتی نور هم نمی‌تونه فرار کنه.'
+    }
+  };
+
+  const div = document.createElement('div');
+  div.className = 'label special';
+  div.textContent = 'سیاه‌چاله';
+  const label = new THREE.CSS2DObject(div);
+  label.position.set(0, 5, 0);
+  group.add(label);
+  labelDivs.push(div);
+
+  scene.add(group);
+  bh.userData = group.userData;
+  clickables.push(bh);
+}
+
+// ============================================================
+//   ستاره دوتایی
+// ============================================================
+const binaryStars = [];
+function createBinaryStars() {
+  const group = new THREE.Group();
+  group.position.set(140, -20, 120);
+
+  const s1 = new THREE.Mesh(new THREE.SphereGeometry(2, 32, 32), new THREE.MeshBasicMaterial({ color: 0xffdd44 }));
+  const s2 = new THREE.Mesh(new THREE.SphereGeometry(1.6, 32, 32), new THREE.MeshBasicMaterial({ color: 0xff8844 }));
+  group.add(s1); group.add(s2);
+
+  const light1 = new THREE.PointLight(0xffdd44, 1.5, 40);
+  const light2 = new THREE.PointLight(0xff8844, 1.5, 40);
+  group.add(light1); group.add(light2);
+
+  group.userData = { s1, s2, light1, light2, angle: 0, radius: 5, speed: 0.02 };
+
+  const div = document.createElement('div');
+  div.className = 'label special';
+  div.textContent = 'ستاره دوتایی';
+  const label = new THREE.CSS2DObject(div);
+  label.position.set(0, 4, 0);
+  group.add(label);
+  labelDivs.push(div);
+
+  scene.add(group);
+  binaryStars.push(group);
+  s1.userData = {
+    name: 'ستاره دوتایی', isBinary: true,
+    info: {
+      name:'ستاره دوتایی', en:'Binary Star', color:0xffdd44,
+      diameter:'—', distance:'خیلی دور', year:'—', day:'—', moons:'—',
+      temp:'هزاران درجه', fact:'دو ستاره که دور مرکز جرم مشترک می‌چرخن.'
+    }
+  };
+  clickables.push(s1);
+}
+
+// ============================================================
+//   Trappist
+// ============================================================
+let trappist;
+function createTrappist() {
+  const group = new THREE.Group();
+  group.position.set(-80, 40, 200);
+
+  const star = new THREE.Mesh(
+    new THREE.SphereGeometry(0.8, 24, 24),
+    new THREE.MeshBasicMaterial({ color: 0xff6633 })
+  );
+  group.add(star);
+  group.add(new THREE.PointLight(0xff6633, 1, 15));
+
+  const colors = [0xcc8855, 0x88aacc, 0x44aacc, 0x99bb77, 0xcc7744, 0x5577bb, 0xaabbcc];
+  trappist = { group, planets: [], star };
+  for (let i = 0; i < 7; i++) {
+    const r = 1.5 + i * 0.6;
+    const p = new THREE.Mesh(
+      new THREE.SphereGeometry(0.12 + Math.random()*0.06, 16, 16),
+      new THREE.MeshStandardMaterial({ color: colors[i], emissive: colors[i], emissiveIntensity: 0.4 })
+    );
+    p.userData = { angle: Math.random()*Math.PI*2, dist: r, speed: 0.05 - i*0.005 };
+    group.add(p);
+    trappist.planets.push(p);
+    const pts = [];
+    for (let j = 0; j <= 64; j++) {
+      const a = (j/64)*Math.PI*2;
+      pts.push(new THREE.Vector3(Math.cos(a)*r, 0, Math.sin(a)*r));
+    }
+    group.add(new THREE.Line(
+      new THREE.BufferGeometry().setFromPoints(pts),
+      new THREE.LineBasicMaterial({ color: 0xff8844, transparent: true, opacity: 0.25 })
+    ));
+  }
+
+  const div = document.createElement('div');
+  div.className = 'label special';
+  div.textContent = 'Trappist-1';
+  const label = new THREE.CSS2DObject(div);
+  label.position.set(0, 2, 0);
+  group.add(label);
+  labelDivs.push(div);
+
+  star.userData = {
+    name: 'Trappist-1', isTrappist: true,
+    info: {
+      name:'Trappist-1', en:'TRAPPIST-1', color:0xff6633,
+      diameter:'کوتوله سرخ', distance:'۴۰ سال نوری',
+      year:'—', day:'—', moons:'۷ سیاره', temp:'۲,۵۰۰°',
+      fact:'۷ سیاره‌ی شبیه زمین داره که دور یه ستاره کوچک می‌چرخن.'
+    }
+  };
+  scene.add(group);
+  clickables.push(star);
+}
+
+// ============================================================
+//   ابرنواختر
+// ============================================================
+let supernovaStar, supernovaParticles, supernovaState = 'idle', supernovaTimer = 0;
+function createSupernova() {
+  const group = new THREE.Group();
+  group.position.set(200, 60, -180);
+
+  supernovaStar = new THREE.Mesh(
+    new THREE.SphereGeometry(2, 32, 32),
+    new THREE.MeshBasicMaterial({ color: 0xffffff })
+  );
+  group.add(supernovaStar);
+  group.add(new THREE.PointLight(0xffffff, 2, 30));
+
+  const pCount = 300;
+  const pGeo = new THREE.BufferGeometry();
+  const pPos = new Float32Array(pCount * 3);
+  const pVel = [];
+  for (let i = 0; i < pCount; i++) {
+    const th = Math.random() * Math.PI * 2;
+    const ph = Math.acos((Math.random() * 2) - 1);
+    const speed = 8 + Math.random() * 12;
+    pVel.push({
+      x: Math.sin(ph) * Math.cos(th) * speed,
+      y: Math.cos(ph) * speed,
+      z: Math.sin(ph) * Math.sin(th) * speed
+    });
+  }
+  pGeo.setAttribute('position', new THREE.BufferAttribute(pPos, 3));
+  supernovaParticles = new THREE.Points(pGeo, new THREE.PointsMaterial({
+    color: 0xffaa44, size: 0.8, transparent: true, opacity: 0
+  }));
+  supernovaParticles.userData.vel = pVel;
+  group.add(supernovaParticles);
+
+  const div = document.createElement('div');
+  div.className = 'label special';
+  div.textContent = 'ستاره متغیر';
+  const label = new THREE.CSS2DObject(div);
+  label.position.set(0, 3, 0);
+  group.add(label);
+  labelDivs.push(div);
+
+  scene.add(group);
+  supernovaStar.userData = {
+    name: 'ستاره ابرنواختر', isSupernova: true,
+    info: {
+      name:'ستاره ابرنواختر', en:'Supernova Candidate', color:0xffffff,
+      diameter:'—', distance:'خیلی دور', year:'—', day:'—', moons:'—',
+      temp:'میلیون‌ها درجه', fact:'ستاره‌ای که در آستانه‌ی انفجاره.'
+    }
+  };
+  clickables.push(supernovaStar);
+}
+
+function updateSupernova(dt) {
+  supernovaTimer += dt;
+  if (supernovaState === 'idle' && supernovaTimer > 6) {
+    supernovaState = 'explode';
+    supernovaTimer = 0;
+    supernovaStar.material.color.setHex(0xffffaa);
+    supernovaParticles.material.opacity = 1;
+    const arr = supernovaParticles.geometry.attributes.position.array;
+    for (let i = 0; i < arr.length; i++) arr[i] = 0;
+    supernovaParticles.geometry.attributes.position.needsUpdate = true;
+  } else if (supernovaState === 'explode') {
+    const arr = supernovaParticles.geometry.attributes.position.array;
+    const vel = supernovaParticles.userData.vel;
+    for (let i = 0; i < vel.length; i++) {
+      arr[i*3]     += vel[i].x * dt * 3;
+      arr[i*3+1]   += vel[i].y * dt * 3;
+      arr[i*3+2]   += vel[i].z * dt * 3;
+    }
+    supernovaParticles.geometry.attributes.position.needsUpdate = true;
+    supernovaParticles.material.opacity = Math.max(0, 1 - supernovaTimer / 2.5);
+    if (supernovaTimer > 2.5) { supernovaState = 'fade'; supernovaTimer = 0; }
+  } else if (supernovaState === 'fade') {
+    if (supernovaTimer > 2) {
+      supernovaState = 'idle';
+      supernovaTimer = 0;
+      supernovaStar.material.color.setHex(0xffffff);
+      supernovaParticles.material.opacity = 0;
+    }
+  }
+}
+
+// ============================================================
+//   شهاب‌سنگ
+// ============================================================
+const meteors = [];
+function createMeteors() {
+  for (let i = 0; i < 8; i++) {
+    const geo = new THREE.BufferGeometry();
+    geo.setAttribute('position', new THREE.BufferAttribute(new Float32Array(20 * 3), 3));
+    const line = new THREE.Line(geo, new THREE.LineBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.9 }));
+    scene.add(line);
+    const m = { line, arr: geo.attributes.position.array, x:0, y:0, z:0, vx:0, vy:0, vz:0, life:0 };
+    resetMeteor(m);
+    meteors.push(m);
+  }
+}
+function resetMeteor(m) {
+  const startR = 200 + Math.random() * 100;
+  const startTh = Math.random() * Math.PI * 2;
+  m.x = Math.cos(startTh) * startR;
+  m.y = 50 + Math.random() * 100;
+  m.z = Math.sin(startTh) * startR;
+  const speed = 80 + Math.random() * 60;
+  m.vx = -m.x / startR * speed;
+  m.vy = -20 - Math.random() * 30;
+  m.vz = -m.z / startR * speed;
+  m.life = 100 + Math.random() * 60;
+}
+function updateMeteors(dt) {
+  meteors.forEach(m => {
+    if (m.life <= 0) resetMeteor(m);
+    m.life -= dt;
+    m.x += m.vx * dt; m.y += m.vy * dt; m.z += m.vz * dt;
+    const L = m.arr.length / 3;
+    for (let i = 0; i < L; i++) {
+      const f = i / L;
+      m.arr[i*3] = m.x + m.vx * f * 0.4;
+      m.arr[i*3+1] = m.y + m.vy * f * 0.4;
+      m.arr[i*3+2] = m.z + m.vz * f * 0.4;
+    }
+    m.line.geometry.attributes.position.needsUpdate = true;
+    m.line.material.opacity = Math.min(1, m.life / 60);
+  });
+}
+
+// ============================================================
+//   مأموریت‌ها
+// ============================================================
+const probes = [];
+function createProbes() {
+  [
+    { angle: 0.5, radius: 50, speed: 0.0015, outward: 0.15, color: 0xffcc44, name: 'وویجر ۱',
+      info: { name:'وویجر ۱', en:'Voyager 1', color:0xffcc44,
+        diameter:'۸۲۵ کیلوگرم', distance:'۲۴ میلیارد کیلومتر', year:'پرتاب ۱۹۷۷',
+        day:'—', moons:'—', temp:'—', fact:'دورترین جسم ساخته‌ی بشر از زمینه.' } },
+    { angle: 2.5, radius: 48, speed: 0.0013, outward: 0.12, color: 0xffaa22, name: 'وویجر ۲',
+      info: { name:'وویجر ۲', en:'Voyager 2', color:0xffaa22,
+        diameter:'۸۲۵ کیلوگرم', distance:'۲۰ میلیارد کیلومتر', year:'پرتاب ۱۹۷۷',
+        day:'—', moons:'—', temp:'—', fact:'تنها فضاپیمایی که از کنار اورانوس و نپتون عبور کرد.' } }
+  ].forEach(d => {
+    const p = makeProbe(d.color);
+    p.userData = { ...d, isProbe: true, info: d.info };
+    scene.add(p);
+    probes.push(p);
+    clickables.push(p);
+    const div = document.createElement('div');
+    div.className = 'label probe';
+    div.textContent = d.name;
+    const label = new THREE.CSS2DObject(div);
+    label.position.set(0, 0.8, 0);
+    p.add(label);
+    labelDivs.push(div);
+  });
+
+  const saturn = clickables.find(p => p.userData.name === 'زحل');
+  if (saturn) {
+    const cassini = makeProbe(0x88ccff);
+    cassini.userData = { angle: 0, speed: 0.04, dist: 3.5, isCassini: true };
+    saturn.add(cassini);
+    const div = document.createElement('div');
+    div.className = 'label probe';
+    div.textContent = 'کاسینی';
+    const label = new THREE.CSS2DObject(div);
+    label.position.set(0, 0.5, 0);
+    cassini.add(label);
+    labelDivs.push(div);
+  }
+
+  const jwst = new THREE.Group();
+  jwst.add(new THREE.Mesh(
+    new THREE.CylinderGeometry(0.5, 0.5, 0.05, 6),
+    new THREE.MeshStandardMaterial({ color: 0xffcc44, metalness: 1, roughness: 0.1, emissive: 0xcc8800, emissiveIntensity: 0.5 })
+  ));
+  const shield = new THREE.Mesh(
+    new THREE.BoxGeometry(1.2, 0.05, 0.8),
+    new THREE.MeshStandardMaterial({ color: 0xcccccc, metalness: 0.9 })
+  );
+  shield.position.y = -0.3;
+  jwst.add(shield);
+  jwst.position.set(80, -20, -50);
+  jwst.userData = {
+    angle: 0, speed: 0.005, radius: 4, name: 'جیمز وب', isJWST: true,
+    info: {
+      name:'جیمز وب', en:'James Webb', color:0xffcc44,
+      diameter:'۶.۵ متر آینه', distance:'۱.۵ م.ک از زمین',
+      year:'پرتاب ۲۰۲۱', day:'—', moons:'—', temp:'−۲۳۳°',
+      fact:'قدرتمندترین تلسکوپ فضایی ساخته‌شده.'
+    }
+  };
+  scene.add(jwst);
+  probes.push(jwst);
+  clickables.push(jwst);
+  const div = document.createElement('div');
+  div.className = 'label probe';
+  div.textContent = 'جیمز وب';
+  const label = new THREE.CSS2DObject(div);
+  label.position.set(0, 1, 0);
+  jwst.add(label);
+  labelDivs.push(div);
+
+  const apollo = makeProbe(0xffffff);
+  apollo.userData = {
+    angle: 0, speed: 0.03, radius: 1.8, name: 'آپولو ۱۱', isApollo: true,
+    info: {
+      name:'آپولو ۱۱', en:'Apollo 11', color:0xffffff,
+      diameter:'۴۵ تن', distance:'۳۸۴,۴۰۰ کیلومتر', year:'۱۹۶۹',
+      day:'—', moons:'—', temp:'—', fact:'اولین مأموریت فرود انسان روی ماه.'
+    }
+  };
+  const earth = clickables.find(p => p.userData.name === 'زمین');
+  if (earth) {
+    earth.add(apollo);
+    clickables.push(apollo);
+    const div2 = document.createElement('div');
+    div2.className = 'label probe';
+    div2.textContent = 'آپولو ۱۱';
+    const label2 = new THREE.CSS2DObject(div2);
+    label2.position.set(0, 0.5, 0);
+    apollo.add(label2);
+    labelDivs.push(div2);
+  }
+}
+
+function makeProbe(color) {
+  const g = new THREE.Group();
+  g.add(new THREE.Mesh(
+    new THREE.BoxGeometry(0.3, 0.3, 0.3),
+    new THREE.MeshStandardMaterial({ color: 0xcccccc, metalness: 0.8, roughness: 0.3 })
+  ));
+  const dish = new THREE.Mesh(
+    new THREE.CircleGeometry(0.5, 16),
+    new THREE.MeshBasicMaterial({ color: 0xffffff, side: THREE.DoubleSide, transparent: true, opacity: 0.85 })
+  );
+  dish.position.set(0, 0.3, 0);
+  dish.rotation.x = Math.PI / 2;
+  g.add(dish);
+  g.add(new THREE.PointLight(color, 0.8, 3));
+  return g;
+}
+
+// ============================================================
+//   ISS، شفق، دنباله‌دار
+// ============================================================
+let iss;
+function createISS() {
+  const earth = clickables.find(p => p.userData.name === 'زمین');
+  if (!earth) return;
+  iss = new THREE.Group();
+  iss.add(new THREE.Mesh(
+    new THREE.BoxGeometry(0.15, 0.05, 0.05),
+    new THREE.MeshStandardMaterial({ color: 0xcccccc, metalness: 0.8 })
+  ));
+  const panelMat = new THREE.MeshStandardMaterial({ color: 0x2244aa, emissive: 0x112288, emissiveIntensity: 0.4 });
+  const p1 = new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.01, 0.08), panelMat);
+  p1.position.set(0.18, 0, 0);
+  iss.add(p1);
+  const p2 = p1.clone(); p2.position.x = -0.18; iss.add(p2);
+  iss.userData = { angle: 0, speed: 0.08, dist: 0.9 };
+  earth.add(iss);
+}
+
+function createAurora() {
+  const earth = clickables.find(p => p.userData.name === 'زمین');
+  if (!earth) return;
+  const aurora = new THREE.Mesh(
+    new THREE.TorusGeometry(0.75, 0.12, 8, 32),
+    new THREE.MeshBasicMaterial({ color: 0x44ff88, transparent: true, opacity: 0.35, side: THREE.DoubleSide })
+  );
+  aurora.rotation.x = Math.PI / 2;
+  aurora.position.y = 0.45;
+  earth.add(aurora);
+  const a2 = aurora.clone();
+  a2.position.y = -0.45;
+  a2.material = aurora.material.clone();
+  a2.material.color.set(0x88ddff);
+  earth.add(a2);
+}
+
+let comet, cometTail;
+function createComet() {
+  comet = new THREE.Mesh(
+    new THREE.SphereGeometry(0.2, 16, 16),
+    new THREE.MeshBasicMaterial({ color: 0xaaffff })
+  );
+  comet.add(new THREE.Mesh(
+    new THREE.SphereGeometry(0.5, 16, 16),
+    new THREE.MeshBasicMaterial({ color: 0x44ddff, transparent: true, opacity: 0.4 })
+  ));
+  scene.add(comet);
+  const L = 50;
+  const geo = new THREE.BufferGeometry();
+  geo.setAttribute('position', new THREE.BufferAttribute(new Float32Array(L * 3), 3));
+  cometTail = new THREE.Line(geo, new THREE.LineBasicMaterial({ color: 0x44ddff, transparent: true, opacity: 0.7 }));
+  scene.add(cometTail);
+  comet.userData = { a: 50, b: 34, angle: 0, speed: 0.004, tailHistory: [], tailLength: L };
+}
+
+// ============================================================
+//   کنترل دوربین
+// ============================================================
+let isDown = false, prevX = 0, prevY = 0;
+let theta = 0.5, phi = Math.PI / 3, camRadius = 60;
+const INITIAL = { theta: 0.5, phi: Math.PI/3, radius: 60 };
+let followMesh = null;
+let camTargetX = 0, camTargetY = 0, camTargetZ = 0;
+
+function updateCamera() {
+  if (followMesh) {
+    const p = new THREE.Vector3();
+    followMesh.getWorldPosition(p);
+    camTargetX = p.x; camTargetY = p.y; camTargetZ = p.z;
+  } else {
+    camTargetX += (0 - camTargetX) * 0.08;
+    camTargetY += (0 - camTargetY) * 0.08;
+    camTargetZ += (0 - camTargetZ) * 0.08;
+  }
+  camera.position.x = camTargetX + camRadius * Math.sin(phi) * Math.sin(theta);
+  camera.position.y = camTargetY + camRadius * Math.cos(phi);
+  camera.position.z = camTargetZ + camRadius * Math.sin(phi) * Math.cos(theta);
+  camera.lookAt(camTargetX, camTargetY, camTargetZ);
+}
+
+renderer.domElement.addEventListener('mousedown', e => {
+  isDown = true; prevX = e.clientX; prevY = e.clientY;
+});
+window.addEventListener('mouseup', () => isDown = false);
+window.addEventListener('mousemove', e => {
+  if (!isDown) return;
+  theta -= (e.clientX - prevX) * 0.005;
+  phi -= (e.clientY - prevY) * 0.005;
+  phi = Math.max(0.1, Math.min(Math.PI - 0.1, phi));
+  prevX = e.clientX; prevY = e.clientY;
+});
+renderer.domElement.addEventListener('wheel', e => {
+  e.preventDefault();
+  camRadius += e.deltaY * 0.05;
+  camRadius = Math.max(3, Math.min(400, camRadius));
+}, { passive: false });
+
+let mouseDownPos = null;
+renderer.domElement.addEventListener('mousedown', e => {
+  mouseDownPos = { x: e.clientX, y: e.clientY };
+});
+renderer.domElement.addEventListener('click', e => {
+  if (!mouseDownPos) return;
+  const dx = e.clientX - mouseDownPos.x;
+  const dy = e.clientY - mouseDownPos.y;
+  if (Math.sqrt(dx*dx + dy*dy) > 5) return;
+
+  mouseNDC.x = (e.clientX / innerWidth) * 2 - 1;
+  mouseNDC.y = -(e.clientY / innerHeight) * 2 + 1;
+  raycaster.setFromCamera(mouseNDC, camera);
+  const hits = raycaster.intersectObjects([sun, ...clickables], false);
+  if (hits.length > 0) {
+    const obj = hits[0].object;
+    if (obj.userData.info) {
+      showPlanetInfo(obj.userData.info, obj);
+      zoomToObject(obj);
+      unlockAchievement('explorer', obj.userData.info.name);
+    }
+  }
+});
+
+function zoomToObject(obj) {
+  followMesh = obj;
+  const p = new THREE.Vector3();
+  obj.getWorldPosition(p);
+  camTargetX = p.x; camTargetY = p.y; camTargetZ = p.z;
+  const targetRadius = obj.userData.size ? obj.userData.size * 8 + 3 : 10;
+  const startRadius = camRadius;
+  const startTime = performance.now();
+  function step() {
+    const t = Math.min(1, (performance.now() - startTime) / 800);
+    const ease = 1 - Math.pow(1 - t, 3);
+    camRadius = startRadius + (targetRadius - startRadius) * ease;
+    if (t < 1) requestAnimationFrame(step);
+  }
+  step();
+}
+
+// ============================================================
+//   پنل اطلاعات
+// ============================================================
+const pi = document.getElementById('planetInfo');
+let currentInfoMesh = null;
+
+function showPlanetInfo(info, mesh) {
+  currentInfoMesh = mesh;
+  document.getElementById('piName').textContent = info.name;
+  document.getElementById('piEnglish').textContent = info.en || '';
+  const colorHex = '#' + info.color.toString(16).padStart(6, '0');
+  const colorEl = document.getElementById('piColor');
+  colorEl.style.background = colorHex;
+  colorEl.style.color = colorHex;
+  document.getElementById('piDiameter').textContent = info.diameter;
+  document.getElementById('piDistance').textContent = info.distance;
+  document.getElementById('piYear').textContent = info.year;
+  document.getElementById('piDay').textContent = info.day;
+  document.getElementById('piMoons').textContent = info.moons;
+  document.getElementById('piTemp').textContent = info.temp;
+  document.getElementById('piFact').textContent = info.fact;
+  pi.classList.add('open');
+  document.getElementById('piFollow').classList.toggle('active', followMesh === mesh);
+}
+
+document.getElementById('piClose').onclick = () => {
+  pi.classList.remove('open');
+  followMesh = null;
+  document.getElementById('piFollow').classList.remove('active');
+};
+document.getElementById('piZoom').onclick = () => { if (currentInfoMesh) zoomToObject(currentInfoMesh); };
+document.getElementById('piFollow').onclick = function() {
+  if (followMesh === currentInfoMesh) {
+    followMesh = null;
+    this.classList.remove('active');
+  } else {
+    followMesh = currentInfoMesh;
+    this.classList.add('active');
+  }
+};
+
+// ============================================================
+//   جستجو
+// ============================================================
+document.getElementById('searchBtn').onclick = doSearch;
+document.getElementById('searchInput').addEventListener('keydown', e => {
+  if (e.key === 'Enter') doSearch();
+});
+function doSearch() {
+  const q = document.getElementById('searchInput').value.trim();
+  if (!q) return;
+  const found = clickables.find(o => {
+    const n = (o.userData.name || '').toLowerCase();
+    const en = (o.userData.info?.en || '').toLowerCase();
+    return n.includes(q.toLowerCase()) || en.includes(q.toLowerCase());
+  });
+  if (found) { showPlanetInfo(found.userData.info, found); zoomToObject(found); }
+}
+
+// ============================================================
+//   دستاوردها
+// ============================================================
+const ACHIEVEMENTS = {
+  firstVisit: { title: '🎉 اولین قدم', desc: 'اولین جرم رو کشف کردی' },
+  explorer: { title: '🔭 کاوشگر', desc: 'همه سیارات رو دیدی' },
+  sunLover: { title: '☀️ عاشق خورشید', desc: 'روی خورشید کلیک کردی' },
+  dwarfFinder: { title: '🪐 شکارچی کوتوله', desc: 'سیارات کوتوله رو دیدی' },
+  voyager: { title: '🚀 همسفر وویجر', desc: 'وویجر ۱ یا ۲ رو پیدا کردی' },
+  blackHole: { title: '🕳️ مسافر سیاه‌چاله', desc: 'سیاه‌چاله رو دیدی' },
+  trappist: { title: '🌌 کاشف Trappist', desc: 'منظومه Trappist-1 رو دیدی' },
+  supernova: { title: '💥 شاهد انفجار', desc: 'ستاره ابرنواختر رو دیدی' },
+  quizMaster: { title: '🎓 فضانورد', desc: 'آزمون رو کامل کردی' },
+  timeTraveler: { title: '⏰ مسافر زمان', desc: 'زمان رو تغییر دادی' }
+};
+
+const unlocked = new Set();
+const visitedNames = new Set();
+
+function unlockAchievement(id, targetName) {
+  if (targetName) visitedNames.add(targetName);
+  if (id === 'explorer' && targetName === 'خورشید') unlock('sunLover');
+  if (id === 'explorer' && (targetName === 'سرس' || targetName === 'پلوتو')) unlock('dwarfFinder');
+  if (id === 'explorer' && (targetName === 'وویجر ۱' || targetName === 'وویجر ۲')) unlock('voyager');
+  if (id === 'explorer' && targetName === 'سیاه‌چاله') unlock('blackHole');
+  if (id === 'explorer' && targetName === 'Trappist-1') unlock('trappist');
+  if (id === 'explorer' && targetName === 'ستاره ابرنواختر') unlock('supernova');
+  unlock('firstVisit');
+  const planetNames = [...PLANETS, ...DWARFS].map(p => p.name);
+  if (planetNames.every(n => visitedNames.has(n))) unlock('explorer');
+  updateAchUI();
+}
+
+function unlock(id) {
+  if (unlocked.has(id)) return;
+  unlocked.add(id);
+  const a = ACHIEVEMENTS[id];
+  if (!a) return;
+  const t = document.createElement('div');
+  t.className = 'ach-toast';
+  t.textContent = '🏆 ' + a.title + ' — ' + a.desc;
+  document.body.appendChild(t);
+  setTimeout(() => t.remove(), 3600);
+}
+
+function updateAchUI() {
+  const list = document.getElementById('achList');
+  list.innerHTML = '';
+  Object.keys(ACHIEVEMENTS).forEach(id => {
+    const a = ACHIEVEMENTS[id];
+    const d = document.createElement('div');
+    d.className = 'ach' + (unlocked.has(id) ? '' : ' locked');
+    d.textContent = unlocked.has(id) ? a.title : '🔒 ???';
+    list.appendChild(d);
+  });
+  document.getElementById('achCount').textContent = unlocked.size + '/' + Object.keys(ACHIEVEMENTS).length;
+}
+updateAchUI();
+
+document.getElementById('btnAch').onclick = function() {
+  document.getElementById('achievements').classList.toggle('open');
+  this.classList.toggle('active');
+};
+
+// ============================================================
+//   دکمه‌ها
+// ============================================================
+let labelsVisible = true, orbitsVisible = true, trailsVisible = false, constellationsVisible = false;
+let soundOn = false, tourOn = false, tourTimeout = null;
+
+document.getElementById('btnLabels').onclick = function() {
+  labelsVisible = !labelsVisible;
+  labelDivs.forEach(d => d.style.display = labelsVisible ? 'block' : 'none');
+  this.classList.toggle('active', labelsVisible);
+};
+document.getElementById('btnOrbits').onclick = function() {
+  orbitsVisible = !orbitsVisible;
+  orbitLines.forEach(o => o.visible = orbitsVisible);
+  this.classList.toggle('active', orbitsVisible);
+};
+document.getElementById('btnConstellations').onclick = function() {
+  constellationsVisible = !constellationsVisible;
+  constellationGroup.visible = constellationsVisible;
+  this.classList.toggle('active', constellationsVisible);
+};
+document.getElementById('btnTrails').onclick = function() {
+  trailsVisible = !trailsVisible;
+  trailLines.forEach(t => t.visible = trailsVisible);
+  this.classList.toggle('active', trailsVisible);
+};
+document.getElementById('btnSound').onclick = function() {
+  soundOn = !soundOn;
+  if (soundOn) startAmbient(); else stopAmbient();
+  this.classList.toggle('active', soundOn);
+};
+document.getElementById('btnSunView').onclick = () => {
+  followMesh = null;
+  camTargetX = 0; camTargetY = 0; camTargetZ = 0;
+  camRadius = 8;
+  theta = 0.5; phi = Math.PI/2.2;
+};
+document.getElementById('btnReset').onclick = () => {
+  followMesh = null;
+  theta = INITIAL.theta; phi = INITIAL.phi; camRadius = INITIAL.radius;
+  camTargetX = camTargetY = camTargetZ = 0;
+  pi.classList.remove('open');
+  if (tourOn) {
+    tourOn = false;
+    document.getElementById('btnTour').classList.remove('active');
+    clearTimeout(tourTimeout);
+    document.getElementById('tourBanner').classList.remove('open');
+  }
+};
+
+// تور
+let tourIndex = 0;
+const tourBodies = [];
+document.getElementById('btnTour').onclick = function() {
+  tourOn = !tourOn;
+  this.classList.toggle('active', tourOn);
+  if (tourOn) {
+    tourBodies.length = 0;
+    clickables.forEach(c => { if (c.userData.info) tourBodies.push(c); });
+    tourIndex = 0;
+    document.getElementById('tourBanner').classList.add('open');
+    nextTourStop();
+  } else {
+    clearTimeout(tourTimeout);
+    followMesh = null;
+    document.getElementById('tourBanner').classList.remove('open');
+  }
+};
+document.getElementById('tourStop').onclick = () => {
+  tourOn = false;
+  document.getElementById('btnTour').classList.remove('active');
+  clearTimeout(tourTimeout);
+  followMesh = null;
+  document.getElementById('tourBanner').classList.remove('open');
+};
+function nextTourStop() {
+  if (!tourOn) return;
+  if (tourIndex >= tourBodies.length) tourIndex = 0;
+  const obj = tourBodies[tourIndex];
+  if (obj && obj.userData.info) {
+    showPlanetInfo(obj.userData.info, obj);
+    zoomToObject(obj);
+    document.getElementById('tourText').textContent = '🎥 در حال نمایش: ' + obj.userData.info.name;
+  }
+  tourIndex++;
+  tourTimeout = setTimeout(nextTourStop, 4500);
+}
+
+// مقایسه اندازه
+document.getElementById('btnCompare').onclick = () => {
+  document.getElementById('sizeCompare').classList.add('open');
+  buildSizeCompare();
+};
+document.getElementById('scClose').onclick = () => {
+  document.getElementById('sizeCompare').classList.remove('open');
+};
+function buildSizeCompare() {
+  const content = document.getElementById('scContent');
+  content.innerHTML = '';
+  const all = [
+    { name: 'خورشید', r: 696000, color: '#ffcc00' },
+    ...PLANETS.map(p => ({ name: p.name, r: p.realR, color: '#' + p.color.toString(16).padStart(6,'0') })),
+    { name: 'سرس', r: 470, color: '#998877' },
+    { name: 'پلوتو', r: 1188, color: '#c8b8a0' }
+  ];
+  const row1 = document.createElement('div'); row1.className = 'row';
+  all.filter(b => ['خورشید','مشتری','زحل'].includes(b.name)).forEach(b => row1.appendChild(buildBody(b, 0.00008)));
+  content.appendChild(row1);
+  const row2 = document.createElement('div'); row2.className = 'row';
+  all.filter(b => ['اورانوس','نپتون','زمین','زهره','مریخ','عطارد'].includes(b.name)).forEach(b => row2.appendChild(buildBody(b, 0.00025)));
+  content.appendChild(row2);
+  const row3 = document.createElement('div'); row3.className = 'row';
+  all.filter(b => ['پلوتو','سرس'].includes(b.name)).forEach(b => row3.appendChild(buildBody(b, 0.0012)));
+  content.appendChild(row3);
+}
+function buildBody(b, scale) {
+  const size = Math.max(20, b.r * scale);
+  const wrap = document.createElement('div');
+  wrap.className = 'body';
+  const circle = document.createElement('div');
+  circle.className = 'circle';
+  circle.style.width = size + 'px';
+  circle.style.height = size + 'px';
+  circle.style.background = b.color;
+  circle.style.color = b.color;
+  wrap.appendChild(circle);
+  const name = document.createElement('div'); name.className = 'name'; name.textContent = b.name;
+  wrap.appendChild(name);
+  const dim = document.createElement('div'); dim.className = 'dim';
+  dim.textContent = b.r.toLocaleString('fa-IR') + ' km';
+  wrap.appendChild(dim);
+  return wrap;
+}
+
+// آزمون
+const QUIZ_QUESTIONS = [
+  { q: 'کدام سیاره بزرگ‌ترین کوه منظومه شمسی رو داره؟', opts: ['زمین','مریخ','مشتری','زهره'], ans: 1 },
+  { q: 'داغ‌ترین سیاره کدام است؟', opts: ['عطارد','زهره','مریخ','مشتری'], ans: 1 },
+  { q: 'کدام سیاره روی پهلو می‌چرخه؟', opts: ['نپتون','اورانوس','زحل','زمین'], ans: 1 },
+  { q: 'بزرگ‌ترین سیاره منظومه شمسی؟', opts: ['زحل','مشتری','اورانوس','نپتون'], ans: 1 },
+  { q: 'حلقه‌ی زحل از چه ساخته شده؟', opts: ['گاز','یخ و سنگ','آتش','فلز'], ans: 1 },
+  { q: 'چند سیاره در منظومه شمسی داریم؟', opts: ['۷','۸','۹','۱۰'], ans: 1 },
+  { q: 'کدام سیاره سریع‌ترین بادها رو داره؟', opts: ['مشتری','نپتون','زحل','زمین'], ans: 1 },
+  { q: 'سیاره‌ای که به «سیاره سرخ» معروفه؟', opts: ['مریخ','مشتری','زهره','عطارد'], ans: 0 },
+  { q: 'در کدام سیاره باران اسیدی می‌باره؟', opts: ['زهره','مریخ','زمین','اورانوس'], ans: 0 },
+  { q: 'کدام مأموریت اولین انسان را به ماه برد؟', opts: ['وویجر','آپولو ۱۱','کاسینی','جیمز وب'], ans: 1 }
+];
+let quizIndex = 0, quizScore = 0;
+
+document.getElementById('btnQuiz').onclick = () => {
+  quizIndex = 0; quizScore = 0;
+  document.getElementById('quiz').classList.add('open');
+  renderQuiz();
+};
+document.getElementById('quizClose').onclick = () => {
+  document.getElementById('quiz').classList.remove('open');
+};
+
+function renderQuiz() {
+  const box = document.getElementById('quizBox');
+  if (quizIndex >= QUIZ_QUESTIONS.length) {
+    box.innerHTML = `<h2>🎉 نتیجه‌ی آزمون</h2>
+      <div class="quiz-result">امتیاز شما: <b>${quizScore}</b> از ${QUIZ_QUESTIONS.length}<br><br>
+      ${quizScore >= 8 ? '🏆 فوق‌العاده! فضانورد واقعی!' : quizScore >= 5 ? '👏 خوب بود!' : '📚 یه کم مطالعه کن!'}
+      </div>
+      <button class="sm" style="margin-top:20px;width:100%;padding:12px" id="quizAgain">🔄 دوباره</button>`;
+    const again = document.getElementById('quizAgain');
+    if (again) again.onclick = () => { quizIndex = 0; quizScore = 0; renderQuiz(); };
+    if (quizScore >= 8) unlock('quizMaster');
+    return;
+  }
+  const q = QUIZ_QUESTIONS[quizIndex];
+  box.innerHTML = `<h2>🎓 آزمون فضایی</h2>
+    <div class="quiz-q">${q.q}</div>
+    ${q.opts.map((o,i) => `<button class="quiz-opt" data-i="${i}">${o}</button>`).join('')}
+    <div class="quiz-progress">سوال ${quizIndex+1} از ${QUIZ_QUESTIONS.length} | امتیاز: ${quizScore}</div>`;
+
+  box.querySelectorAll('.quiz-opt').forEach(btn => {
+    btn.onclick = () => {
+      const chosen = parseInt(btn.dataset.i);
+      const correct = q.ans;
+      box.querySelectorAll('.quiz-opt').forEach((b, i) => {
+        if (i === correct) b.classList.add('correct');
+        else if (i === chosen && i !== correct) b.classList.add('wrong');
+        b.style.pointerEvents = 'none';
+      });
+      if (chosen === correct) quizScore++;
+      setTimeout(() => { quizIndex++; renderQuiz(); }, 1200);
+    };
+  });
+}
+
+// سفر در زمان
+const REF_YEAR = 2026;
+document.getElementById('btnTravel').onclick = function() {
+  document.getElementById('timeTravel').classList.toggle('open');
+  this.classList.toggle('active');
+};
+document.querySelectorAll('#timeTravel .presets .sm').forEach(b => {
+  b.onclick = () => {
+    document.getElementById('yearInput').value = b.dataset.year;
+    applyTimeTravel(parseInt(b.dataset.year));
+  };
+});
+document.getElementById('yearInput').addEventListener('change', e => {
+  applyTimeTravel(parseInt(e.target.value));
+});
+function applyTimeTravel(year) {
+  if (isNaN(year)) return;
+  unlock('timeTraveler');
+  const daysDiff = (year - REF_YEAR) * 365.25;
+  const periods = { 'عطارد':88, 'زهره':225, 'زمین':365.25, 'مریخ':687, 'مشتری':4333, 'زحل':10759, 'اورانوس':30687, 'نپتون':60190, 'سرس':1680, 'پلوتو':90560 };
+  clickables.forEach(mesh => {
+    if (!mesh.userData.isPlanet) return;
+    const period = periods[mesh.userData.name] || 365;
+    const baseAngle = mesh.userData.baseAngle || 0;
+    mesh.userData.angle = baseAngle + (daysDiff / period) * Math.PI * 2;
+    mesh.position.x = Math.cos(mesh.userData.angle) * mesh.userData.dist;
+    mesh.position.z = Math.sin(mesh.userData.angle) * mesh.userData.dist;
+  });
+}
+
+// عکس‌برداری
+document.getElementById('btnShot').onclick = () => {
+  renderer.render(scene, camera);
+  const dataURL = renderer.domElement.toDataURL('image/png');
+  const a = document.createElement('a');
+  a.href = dataURL;
+  a.download = 'solar-system-' + Date.now() + '.png';
+  a.click();
+  const t = document.createElement('div');
+  t.className = 'ach-toast';
+  t.textContent = '📸 عکس ذخیره شد!';
+  document.body.appendChild(t);
+  setTimeout(() => t.remove(), 2500);
+};
+
+// صدا
+let audioCtx = null, audioNodes = [];
+function startAmbient() {
+  try {
+    if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    if (audioCtx.state === 'suspended') audioCtx.resume();
+    const o1 = audioCtx.createOscillator(); o1.type = 'sine'; o1.frequency.value = 55;
+    const g1 = audioCtx.createGain(); g1.gain.value = 0.02;
+    o1.connect(g1).connect(audioCtx.destination); o1.start();
+    const o2 = audioCtx.createOscillator(); o2.type = 'sine'; o2.frequency.value = 82.5;
+    const g2 = audioCtx.createGain(); g2.gain.value = 0.012;
+    o2.connect(g2).connect(audioCtx.destination); o2.start();
+    const lfo = audioCtx.createOscillator(); lfo.frequency.value = 0.1;
+    const lfoGain = audioCtx.createGain(); lfoGain.gain.value = 0.005;
+    lfo.connect(lfoGain).connect(g1.gain); lfo.start();
+    audioNodes = [o1, o2, lfo, g1, g2, lfoGain];
+  } catch (e) {}
+}
+function stopAmbient() {
+  audioNodes.forEach(n => { try { n.stop?.(); n.disconnect?.(); } catch(_) {} });
+  audioNodes = [];
+}
+
+// سرعت زمان
+let timeScale = 1.0;
+document.getElementById('speedSlider').oninput = function() {
+  timeScale = this.value / 10;
+  document.getElementById('speedValue').textContent = timeScale.toFixed(1) + 'x';
+};
+
+// تاریخ
+function updateDate() {
+  const now = new Date();
+  document.getElementById('dateVal').textContent = now.toLocaleDateString('fa-IR', { year: 'numeric', month: 'long', day: 'numeric' });
+  document.getElementById('timeVal').textContent = now.toLocaleTimeString('fa-IR', { hour: '2-digit', minute: '2-digit' });
+}
+
+// ============================================================
+//   انیمیشن
+// ============================================================
+let lastTime = performance.now();
+function animate(now) {
+  requestAnimationFrame(animate);
+  const dt = Math.min(0.05, (now - lastTime) / 1000);
+  lastTime = now;
+
+  if (sun) sun.rotation.y += 0.0015 * timeScale;
+  if (sunGlow) {
+    sunGlow.rotation.y -= 0.001 * timeScale;
+    if (sunGlow.userData.glow2) sunGlow.userData.glow2.rotation.y += 0.0008 * timeScale;
+  }
+
+  clickables.forEach(mesh => {
+    if (!mesh.userData.isPlanet) return;
+    const d = mesh.userData;
+    d.angle += d.speed * 0.5 * timeScale;
+    mesh.position.x = Math.cos(d.angle) * d.dist;
+    mesh.position.z = Math.sin(d.angle) * d.dist;
+    mesh.rotation.y += 0.02 * timeScale;
+    if (d.moonMeshes) {
+      d.moonMeshes.forEach(moon => {
+        const md = moon.userData;
+        md.angle += md.speed * timeScale;
+        moon.position.x = Math.cos(md.angle) * md.dist;
+        moon.position.z = Math.sin(md.angle) * md.dist;
+        moon.rotation.y += 0.03 * timeScale;
+      });
+    }
+    if (mesh.userData.trail) {
+      const t = mesh.userData.trail;
+      const wp = new THREE.Vector3();
+      mesh.getWorldPosition(wp);
+      t.userData.positions.push(wp.clone());
+      if (t.userData.positions.length > 100) t.userData.positions.shift();
+      const arr = t.geometry.attributes.position.array;
+      const pos = t.userData.positions;
+      for (let i = 0; i < 100; i++) {
+        const p = pos[Math.min(i, pos.length - 1)] || wp;
+        arr[i*3] = p.x; arr[i*3+1] = p.y; arr[i*3+2] = p.z;
+      }
+      t.geometry.attributes.position.needsUpdate = true;
+      t.geometry.setDrawRange(0, pos.length);
+    }
+  });
+
+  probes.forEach(p => {
+    const d = p.userData;
+    if (d.outward) {
+      d.angle += d.speed * timeScale;
+      d.radius += d.outward * timeScale * 0.05;
+      p.position.x = Math.cos(d.angle) * d.radius;
+      p.position.z = Math.sin(d.angle) * d.radius;
+      p.position.y = Math.sin(d.angle * 1.7) * 4;
+      p.rotation.y = -d.angle;
+      if (d.radius > 200) d.radius = 45;
+    } else if (d.isJWST) {
+      d.angle += d.speed * timeScale;
+      p.position.x = 80 + Math.cos(d.angle) * d.radius;
+      p.position.z = -50 + Math.sin(d.angle) * d.radius;
+    } else if (d.isCassini) {
+      d.angle += d.speed * timeScale;
+      p.position.x = Math.cos(d.angle) * d.dist;
+      p.position.z = Math.sin(d.angle) * d.dist;
+    } else if (d.isApollo) {
+      d.angle += d.speed * timeScale;
+      p.position.x = Math.cos(d.angle) * d.radius;
+      p.position.z = Math.sin(d.angle) * d.radius;
+    }
+  });
+
+  if (iss) {
+    const d = iss.userData;
+    d.angle += d.speed * 0.02 * timeScale;
+    iss.position.x = Math.cos(d.angle) * d.dist;
+    iss.position.z = Math.sin(d.angle) * d.dist;
+    iss.rotation.y = -d.angle;
+  }
+
+  if (accretionDisk) accretionDisk.rotation.z += 0.01 * timeScale;
+
+  binaryStars.forEach(g => {
+    const d = g.userData;
+    d.angle += d.speed * timeScale;
+    d.s1.position.x = Math.cos(d.angle) * d.radius;
+    d.s1.position.z = Math.sin(d.angle) * d.radius;
+    d.s2.position.x = -Math.cos(d.angle) * d.radius;
+    d.s2.position.z = -Math.sin(d.angle) * d.radius;
+    d.light1.position.copy(d.s1.position);
+    d.light2.position.copy(d.s2.position);
+  });
+
+  if (trappist) {
+    trappist.planets.forEach(p => {
+      p.userData.angle += p.userData.speed * timeScale;
+      p.position.x = Math.cos(p.userData.angle) * p.userData.dist;
+      p.position.z = Math.sin(p.userData.angle) * p.userData.dist;
+    });
+  }
+
+  updateSupernova(dt * timeScale);
+  updateMeteors(dt * timeScale);
+
+  if (comet) {
+    const d = comet.userData;
+    d.angle += d.speed * timeScale;
+    const x = Math.cos(d.angle) * d.a;
+    const z = Math.sin(d.angle) * d.b;
+    const y = Math.sin(d.angle * 2) * 5;
+    comet.position.set(x, y, z);
+    d.tailHistory.push(new THREE.Vector3(x, y, z));
+    if (d.tailHistory.length > d.tailLength) d.tailHistory.shift();
+    const arr = cometTail.geometry.attributes.position.array;
+    for (let i = 0; i < d.tailLength; i++) {
+      const p = d.tailHistory[Math.min(i, d.tailHistory.length - 1)];
+      arr[i*3] = p.x; arr[i*3+1] = p.y; arr[i*3+2] = p.z;
+    }
+    cometTail.geometry.attributes.position.needsUpdate = true;
+    cometTail.geometry.setDrawRange(0, d.tailHistory.length);
+  }
+
+  updateCamera();
+  renderer.render(scene, camera);
+  labelRenderer.render(scene, camera);
+}
+
+// ============================================================
+//   شروع
+// ============================================================
+createMilkyWay();
+createNebula();
+createStars();
+constellationGroup = createConstellations();
+createSun();
+createPlanets();
+createMoons();
+createAsteroidBelt();
+createKuiperBelt();
+createOortCloud();
+createBlackHole();
+createBinaryStars();
+createTrappist();
+createSupernova();
+createMeteors();
+createProbes();
+createISS();
+createAurora();
+createComet();
+
+updateDate();
+setInterval(updateDate, 30000);
+updateCamera();
+requestAnimationFrame(animate);
+
+window.addEventListener('resize', () => {
+  camera.aspect = innerWidth / innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(innerWidth, innerHeight);
+  labelRenderer.setSize(innerWidth, innerHeight);
+});
+</script>
+</body>
+</html>
