@@ -2,7 +2,7 @@
 <html lang="fa" dir="rtl">
 <head>
 <meta charset="UTF-8">
-<title>منظومه شمسی جامع</title>
+<title>منظومه شمسی — نسخه حرفه‌ای</title>
 <style>
   * { box-sizing: border-box; }
   body { margin: 0; overflow: hidden; background: #000; font-family: Tahoma, sans-serif; }
@@ -38,7 +38,6 @@
     border-radius: 8px; font-family: Tahoma;
     font-size: 13px; width: 140px; outline: none;
   }
-  #searchBox input:focus { border-color: #4fc3f7; }
   button.sm {
     background: rgba(79,195,247,0.15);
     color: #4fc3f7; border: 1px solid #4fc3f7;
@@ -85,10 +84,11 @@
   .label.moon { color: #88ddff; font-size: 10px; }
   .label.probe { color: #ffcc44; font-size: 10px; }
   .label.special { color: #ff88ff; font-size: 11px; }
+  .label.star { color: #ffe68a; font-size: 10px; }
   #planetInfo {
     position: fixed; top: 50%; left: 20px;
     transform: translateY(-50%) translateX(-120%);
-    width: 320px; max-height: 80vh; overflow-y: auto;
+    width: 340px; max-height: 80vh; overflow-y: auto;
     background: rgba(10,15,30,0.95);
     border: 1px solid rgba(79,195,247,0.5);
     border-radius: 16px; padding: 22px;
@@ -145,7 +145,6 @@
     cursor: pointer; font-size: 15px;
     display: flex; align-items: center; justify-content: center;
   }
-  #planetInfo .p-close:hover { background: #ff5050; color: #000; }
   #hint {
     position: fixed; bottom: 12px; left: 50%;
     transform: translateX(-50%);
@@ -155,10 +154,9 @@
     border: 1px solid rgba(79,195,247,0.15);
     z-index: 99; pointer-events: none;
   }
-  #hint b { color: #4fc3f7; }
   #achievements {
     position: fixed; top: 12px; right: 12px;
-    width: 220px; padding: 12px 16px;
+    width: 240px; padding: 12px 16px;
     z-index: 150; font-size: 12px; display: none;
   }
   #achievements.open { display: block; }
@@ -190,7 +188,7 @@
   @keyframes achOut { to { opacity: 0; transform: translateX(-50%) translateY(-30px); } }
   #sizeCompare {
     position: fixed; inset: 0;
-    background: rgba(0,0,0,0.9);
+    background: rgba(0,0,0,0.92);
     z-index: 250; display: none;
     padding: 40px; overflow-y: auto;
   }
@@ -285,6 +283,45 @@
     cursor: pointer; font-size: 12px;
     font-family: Tahoma;
   }
+  /* HUD برای دید اول‌شخص */
+  .hud {
+    position: fixed; inset: 0;
+    pointer-events: none;
+    z-index: 90;
+    display: none;
+  }
+  .hud.on { display: block; }
+  .hud::before, .hud::after {
+    content: ''; position: absolute;
+    background: rgba(79,195,247,0.5);
+  }
+  .hud::before {
+    top: 50%; left: 50%;
+    transform: translate(-50%,-50%);
+    width: 4px; height: 4px; border-radius: 50%;
+  }
+  /* پنل ستاره‌های نزدیک */
+  #starsPanel {
+    position: fixed; top: 50%; right: 20px;
+    transform: translateY(-50%) translateX(120%);
+    width: 300px; max-height: 75vh; overflow-y: auto;
+    background: rgba(10,15,30,0.95);
+    border: 1px solid rgba(255,230,138,0.5);
+    border-radius: 16px; padding: 20px;
+    z-index: 200; backdrop-filter: blur(15px);
+    transition: transform 0.4s cubic-bezier(0.2, 0.9, 0.3, 1);
+  }
+  #starsPanel.open { transform: translateY(-50%) translateX(0); }
+  #starsPanel h3 { color: #ffe68a; margin: 0 0 14px; font-size: 16px; }
+  #starsPanel .star {
+    padding: 8px 12px; margin-bottom: 6px;
+    background: rgba(255,230,138,0.08);
+    border-left: 3px solid #ffe68a;
+    border-radius: 8px; color: #ddd;
+    font-size: 12px;
+  }
+  #starsPanel .star b { color: #ffe68a; }
+  #starsPanel .star small { color: #888; font-size: 10.5px; display: block; margin-top: 2px; }
   ::-webkit-scrollbar { width: 6px; }
   ::-webkit-scrollbar-track { background: transparent; }
   ::-webkit-scrollbar-thumb { background: rgba(79,195,247,0.4); border-radius: 3px; }
@@ -312,21 +349,32 @@
   <label>⏰ سفر در زمان</label>
   <input id="yearInput" type="number" value="2026" min="1900" max="2200">
   <div class="presets">
-    <button class="sm" data-year="1969">۱۹۶۹ آپولو</button>
-    <button class="sm" data-year="1977">۱۹۷۷ وویجر</button>
+    <button class="sm" data-year="1969">۱۹۶۹</button>
+    <button class="sm" data-year="1977">۱۹۷۷</button>
     <button class="sm" data-year="2026">اکنون</button>
-    <button class="sm" data-year="2061">۲۰۶۱ هالی</button>
+    <button class="sm" data-year="2061">۲۰۶۱</button>
   </div>
 </div>
 
+<div id="starsPanel" class="glass">
+  <h3>⭐ ستاره‌های نزدیک</h3>
+  <div id="starsList"></div>
+</div>
+
 <div id="achievements" class="glass">
-  <h3>🏆 دستاوردها <span id="achCount">0/10</span></h3>
+  <h3>🏆 دستاوردها <span id="achCount">0/12</span></h3>
   <div id="achList"></div>
 </div>
 
 <div class="tour-banner" id="tourBanner">
   <span id="tourText"></span>
   <button id="tourStop">توقف</button>
+</div>
+
+<div class="hud" id="hud">
+  <div style="position:absolute;bottom:80px;left:50%;transform:translateX(-50%);color:#4fc3f7;font-family:Tahoma;font-size:12px;background:rgba(0,0,0,0.6);padding:6px 14px;border-radius:8px">
+    حالت اول‌شخص — با WASD حرکت کن، با موس بچرخ
+  </div>
 </div>
 
 <div id="timeBar" class="glass">
@@ -339,18 +387,23 @@
   <button class="sm" id="btnOrbits">⭕ مدارها</button>
   <button class="sm" id="btnConstellations">✨ فلکی</button>
   <button class="sm" id="btnTrails">💫 دنباله</button>
-  <button class="sm" id="btnSound">🔊 صدا</button>
+  <button class="sm" id="btnHabitable">🌱 کمربند حیات</button>
+  <button class="sm" id="btnNearbyStars">⭐ ستاره‌ها</button>
   <button class="sm" id="btnTour">🎥 تور</button>
   <button class="sm" id="btnTravel">⏰ زمان</button>
   <button class="sm" id="btnCompare">📏 اندازه</button>
+  <button class="sm" id="btnAge">🧮 سن</button>
   <button class="sm" id="btnQuiz">🎓 آزمون</button>
-  <button class="sm" id="btnShot">📸 عکس</button>
-  <button class="sm" id="btnSunView">☀️ خورشید</button>
+  <button class="sm" id="btnShot">📸</button>
+  <button class="sm" id="btnFPS">👁️ اول‌شخص</button>
+  <button class="sm" id="btnSave">💾 ذخیره</button>
+  <button class="sm" id="btnLoad">📂 بارگذاری</button>
+  <button class="sm" id="btnSunView">☀️</button>
   <button class="sm" id="btnAch">🏆</button>
   <button class="sm" id="btnReset">🔄</button>
 </div>
 
-<div id="hint">💡 روی هر جرم <b>کلیک کن</b> — دوربین پرواز می‌کنه سمتش</div>
+<div id="hint">💡 روی هر جرم <b>کلیک کن</b></div>
 
 <div id="planetInfo">
   <button class="p-close" id="piClose">✕</button>
@@ -367,10 +420,11 @@
   <div class="p-row"><span class="k">مدت یک روز</span><span class="v" id="piDay"></span></div>
   <div class="p-row"><span class="k">تعداد قمرها</span><span class="v" id="piMoons"></span></div>
   <div class="p-row"><span class="k">دما</span><span class="v" id="piTemp"></span></div>
+  <div class="p-row"><span class="k">جاذبه</span><span class="v" id="piGravity"></span></div>
   <div class="p-fact" id="piFact"></div>
   <div class="p-buttons">
-    <button id="piFollow">🎯 دنبال کن</button>
-    <button id="piZoom">🔍 نزدیک شو</button>
+    <button id="piFollow">🎯 دنبال</button>
+    <button id="piZoom">🔍 نزدیک</button>
   </div>
 </div>
 
@@ -385,67 +439,100 @@
   <div class="quiz-box" id="quizBox"></div>
 </div>
 
+<div id="ageCalc" class="glass" style="display:none;position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);z-index:250;padding:24px;width:340px">
+  <h3 style="color:#4fc3f7;margin:0 0 14px">🧮 محاسبه‌گر سن سیارات</h3>
+  <label style="color:#aaa;font-size:12px">سن شما به سال زمینی:</label>
+  <input id="ageInput" type="number" value="13" style="width:100%;margin:8px 0 14px;padding:8px;background:rgba(0,0,0,0.5);border:1px solid rgba(79,195,247,0.4);color:#fff;border-radius:8px;font-family:Tahoma">
+  <div id="ageResults"></div>
+  <button class="sm" id="ageClose" style="width:100%;margin-top:12px;padding:10px">بستن</button>
+</div>
+
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/renderers/CSS2DRenderer.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/EffectComposer.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/RenderPass.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/UnrealBloomPass.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/shaders/CopyShader.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/shaders/LuminosityHighPassShader.js"></script>
 <script>
 'use strict';
 
 // ============================================================
-//   داده‌ها
+//   داده‌های دقیق سیارات
 // ============================================================
 const PLANETS = [
-  { name:'عطارد', en:'Mercury', color:0xa8a8a8, glow:0xdddddd, size:0.38, dist:6, speed:0.025, tilt:0.01, realR:2440,
-    diameter:'۴,۸۷۹ کیلومتر', distance:'۵۷.۹ م.ک', year:'۸۸ روز', day:'۵۹ روز', moons:'۰', temp:'−۱۷۳ تا ۴۲۷°',
-    fact:'کوچک‌ترین سیاره و نزدیک‌ترین به خورشیده.' },
-  { name:'زهره', en:'Venus', color:0xe8b970, glow:0xffd99a, size:0.55, dist:8.5, speed:0.018, tilt:0.02, realR:6052,
-    diameter:'۱۲,۱۰۴ کیلومتر', distance:'۱۰۸.۲ م.ک', year:'۲۲۵ روز', day:'۲۴۳ روز', moons:'۰', temp:'۴۶۴°',
-    fact:'داغ‌ترین سیاره، ابرهای اسیدی داره.' },
-  { name:'زمین', en:'Earth', color:0x2a6fc4, glow:0x4fa3f7, size:0.6, dist:11.5, speed:0.014, tilt:0.41, realR:6371,
-    diameter:'۱۲,۷۴۲ کیلومتر', distance:'۱۴۹.۶ م.ک', year:'۳۶۵.۲۵ روز', day:'۲۴ ساعت', moons:'۱', temp:'−۸۸ تا ۵۸°',
-    fact:'تنها سیاره‌ای که می‌دونیم حیات داره. ۷۱٪ آب.' },
-  { name:'مریخ', en:'Mars', color:0xb0432c, glow:0xe85a3a, size:0.45, dist:14.5, speed:0.011, tilt:0.44, realR:3389,
-    diameter:'۶,۷۷۹ کیلومتر', distance:'۲۲۷.۹ م.ک', year:'۶۸۷ روز', day:'۲۴.۶ ساعت', moons:'۲', temp:'−۱۵۳ تا ۲۰°',
-    fact:'بلندترین کوه منظومه، المپوس مونس (۲۲ km).' },
-  { name:'مشتری', en:'Jupiter', color:0xc08a52, glow:0xe0a878, size:1.6, dist:20, speed:0.007, tilt:0.05, realR:69911,
-    diameter:'۱۳۹,۸۲۰ کیلومتر', distance:'۷۷۸.۵ م.ک', year:'۱۱.۹ سال', day:'۹.۹ ساعت', moons:'۹۵', temp:'−۱۴۵°',
-    fact:'بزرگ‌ترین سیاره. لکه‌ی سرخ بزرگش طوفانی عظیمه.' },
-  { name:'زحل', en:'Saturn', color:0xd4b070, glow:0xf0d090, size:1.4, dist:27, speed:0.005, tilt:0.47, realR:58232,
-    diameter:'۱۱۶,۴۶۰ کیلومتر', distance:'۱.۴۳ میلیارد', year:'۲۹.۵ سال', day:'۱۰.۷ ساعت', moons:'۱۴۶', temp:'−۱۷۸°',
-    fact:'حلقه‌هاش از یخ و سنگ. سبک‌تر از آب!' },
-  { name:'اورانوس', en:'Uranus', color:0x6ec8d8, glow:0x9ee0e8, size:0.9, dist:33, speed:0.0035, tilt:1.71, realR:25362,
-    diameter:'۵۰,۷۲۴ کیلومتر', distance:'۲.۸۷ میلیارد', year:'۸۴ سال', day:'۱۷.۲ ساعت', moons:'۲۸', temp:'−۲۲۴°',
+  { name:'عطارد', en:'Mercury', color:0x8c8278, glow:0xa89a8a, size:0.38, dist:6, speed:0.025, tilt:0.001, realR:2440,
+    diameter:'۴,۸۷۹ کیلومتر', distance:'۵۷.۹ م.ک', year:'۸۸ روز', day:'۵۹ روز', moons:'۰', temp:'−۱۷۳ تا ۴۲۷°', gravity:'۳.۷',
+    fact:'کوچک‌ترین سیاره و نزدیک‌ترین به خورشیده. سطحش پر از دهانه‌های برخوردیه.' },
+  { name:'زهره', en:'Venus', color:0xe8c97a, glow:0xffe6a8, size:0.55, dist:8.5, speed:0.018, tilt:3.096, realR:6052,
+    diameter:'۱۲,۱۰۴ کیلومتر', distance:'۱۰۸.۲ م.ک', year:'۲۲۵ روز', day:'۲۴۳ روز', moons:'۰', temp:'۴۶۴°', gravity:'۸.۹',
+    fact:'داغ‌ترین سیاره با ابرهای اسیدی. مثل کوره‌ای زیر فشار ۹۰ اتمسفر.' },
+  { name:'زمین', en:'Earth', color:0x2a6fc4, glow:0x4fa3f7, size:0.6, dist:11.5, speed:0.014, tilt:0.409, realR:6371,
+    diameter:'۱۲,۷۴۲ کیلومتر', distance:'۱۴۹.۶ م.ک', year:'۳۶۵.۲۵ روز', day:'۲۳.۹ ساعت', moons:'۱', temp:'−۸۸ تا ۵۸°', gravity:'۹.۸',
+    fact:'تنها سیاره‌ای که می‌دونیم حیات داره. ۷۱٪ سطحش آب مایع.' },
+  { name:'مریخ', en:'Mars', color:0xc1440e, glow:0xe85a3a, size:0.45, dist:14.5, speed:0.011, tilt:0.439, realR:3389,
+    diameter:'۶,۷۷۹ کیلومتر', distance:'۲۲۷.۹ م.ک', year:'۶۸۷ روز', day:'۲۴.۶ ساعت', moons:'۲', temp:'−۱۵۳ تا ۲۰°', gravity:'۳.۷',
+    fact:'بلندترین کوه منظومه، المپوس مونس (۲۲ km). رنگش از اکسید آهن (زنگ).' },
+  { name:'مشتری', en:'Jupiter', color:0xc08a52, glow:0xe0a878, size:1.6, dist:20, speed:0.007, tilt:0.055, realR:69911,
+    diameter:'۱۳۹,۸۲۰ کیلومتر', distance:'۷۷۸.۵ م.ک', year:'۱۱.۹ سال', day:'۹.۹ ساعت', moons:'۹۵', temp:'−۱۴۵°', gravity:'۲۴.۸',
+    fact:'بزرگ‌ترین سیاره. لکه سرخ بزرگش طوفانی ۳۵۰ ساله.' },
+  { name:'زحل', en:'Saturn', color:0xd4b070, glow:0xf0d090, size:1.4, dist:27, speed:0.005, tilt:0.466, realR:58232,
+    diameter:'۱۱۶,۴۶۰ کیلومتر', distance:'۱.۴۳ میلیارد', year:'۲۹.۵ سال', day:'۱۰.۷ ساعت', moons:'۱۴۶', temp:'−۱۷۸°', gravity:'۱۰.۴',
+    fact:'حلقه‌هاش از یخ و سنگ. چگالیش کمتر از آبه!' },
+  { name:'اورانوس', en:'Uranus', color:0x6ec8d8, glow:0x9ee0e8, size:0.9, dist:33, speed:0.0035, tilt:1.706, realR:25362,
+    diameter:'۵۰,۷۲۴ کیلومتر', distance:'۲.۸۷ میلیارد', year:'۸۴ سال', day:'۱۷.۲ ساعت', moons:'۲۸', temp:'−۲۲۴°', gravity:'۸.۷',
     fact:'روی پهلو می‌چرخه! محورش ۹۸ درجه کجه.' },
-  { name:'نپتون', en:'Neptune', color:0x3050b0, glow:0x5070d0, size:0.88, dist:38, speed:0.0025, tilt:0.49, realR:24622,
-    diameter:'۴۹,۲۴۴ کیلومتر', distance:'۴.۵ میلیارد', year:'۱۶۵ سال', day:'۱۶.۱ ساعت', moons:'۱۶', temp:'−۲۱۴°',
-    fact:'بادهایی با سرعت ۲,۱۰۰ km/h — سریع‌ترین.' }
+  { name:'نپتون', en:'Neptune', color:0x3050b0, glow:0x5070d0, size:0.88, dist:38, speed:0.0025, tilt:0.494, realR:24622,
+    diameter:'۴۹,۲۴۴ کیلومتر', distance:'۴.۵ میلیارد', year:'۱۶۵ سال', day:'۱۶.۱ ساعت', moons:'۱۶', temp:'−۲۱۴°', gravity:'۱۱.۲',
+    fact:'بادهایی با سرعت ۲,۱۰۰ km/h. دورترین سیاره.' }
 ];
 
 const DWARFS = [
   { name:'سرس', en:'Ceres', color:0x998877, glow:0xbbaa99, size:0.25, dist:17, speed:0.009, tilt:0.1, realR:470,
-    diameter:'۹۳۹ کیلومتر', distance:'۴۱۳ م.ک', year:'۴.۶ سال', day:'۹ ساعت', moons:'۰', temp:'−۱۰۵°',
-    fact:'بزرگ‌ترین جسم کمربند سیارک‌هاست.' },
+    diameter:'۹۳۹ کیلومتر', distance:'۴۱۳ م.ک', year:'۴.۶ سال', day:'۹ ساعت', moons:'۰', temp:'−۱۰۵°', gravity:'۰.۳',
+    fact:'بزرگ‌ترین جسم کمربند سیارک‌ها.' },
   { name:'پلوتو', en:'Pluto', color:0xc8b8a0, glow:0xe8d8c0, size:0.22, dist:44, speed:0.0018, tilt:2.0, realR:1188,
-    diameter:'۲,۳۷۷ کیلومتر', distance:'۵.۹ میلیارد', year:'۲۴۸ سال', day:'۶.۴ روز', moons:'۵', temp:'−۲۲۹°',
-    fact:'در ۲۰۰۶ از سیاره به سیاره کوتوله تغییر رده داد.' }
+    diameter:'۲,۳۷۷ کیلومتر', distance:'۵.۹ میلیارد', year:'۲۴۸ سال', day:'۶.۴ روز', moons:'۵', temp:'−۲۲۹°', gravity:'۰.۶',
+    fact:'در ۲۰۰۶ به سیاره کوتوله تغییر رده داد.' }
 ];
 
 const FAMOUS_MOONS = [
   { name:'ماه', parent:'زمین', color:0xbbbbbb, size:0.16, dist:1.2, speed:0.05 },
   { name:'فوبوس', parent:'مریخ', color:0x998877, size:0.09, dist:0.9, speed:0.08 },
-  { name:'اروپا', parent:'مشتری', color:0xddddcc, size:0.15, dist:2.4, speed:0.04 },
+  { name:'اروپا', parent:'مشتری', color:0xdddccc, size:0.15, dist:2.4, speed:0.04 },
   { name:'آیو', parent:'مشتری', color:0xffdd66, size:0.14, dist:2.0, speed:0.055 },
   { name:'گانیمد', parent:'مشتری', color:0xaa9988, size:0.18, dist:2.8, speed:0.03 },
   { name:'تیتان', parent:'زحل', color:0xdd9944, size:0.18, dist:2.5, speed:0.035 }
 ];
 
+// نیم‌قطر مدار بزرگ‌تر و خروج از مرکز (بیضی کپلری)
+const ORBIT_ECC = { 'عطارد':0.206, 'زهره':0.007, 'زمین':0.017, 'مریخ':0.093, 'مشتری':0.049, 'زحل':0.057, 'اورانوس':0.046, 'نپتون':0.009, 'سرس':0.076, 'پلوتو':0.249 };
+
+const NEARBY_STARS = [
+  { name:'پروکسیما قنطورس', dist:'۴.۲۴ سال نوری', type:'کوتوله سرخ', mag:'۱۱.۱' },
+  { name:'آلفا قنطورس A', dist:'۴.۳۷ سال نوری', type:'شبیه خورشید', mag:'−۰.۰۱' },
+  { name:'ستاره بارنارد', dist:'۵.۹۶ سال نوری', type:'کوتوله سرخ', mag:'۹.۵' },
+  { name:'ولف ۳۵۹', dist:'۷.۸۶ سال نوری', type:'کوتوله سرخ', mag:'۱۳.۵' },
+  { name:'لالانده ۲۱۱۸۵', dist:'۸.۳۱ سال نوری', type:'کوتوله سرخ', mag:'۷.۵' },
+  { name:'سیریوس A', dist:'۸.۶ سال نوری', type:'سفید-آبی درخشان', mag:'−۱.۴۶' },
+  { name:'سیریوس B', dist:'۸.۶ سال نوری', type:'کوتوله سفید', mag:'۸.۴' },
+  { name:'اکس ۹۳۵۲', dist:'۱۰.۵ سال نوری', type:'کوتوله سرخ', mag:'—' },
+  { name:'روس ۱۲۸', dist:'۱۰.۹ سال نوری', type:'کوتوله سرخ', mag:'—' },
+  { name:'اپسیلون اریدانی', dist:'۱۰.۵ سال نوری', type:'شبیه خورشید', mag:'۳.۷' },
+  { name:'لویتن', dist:'۱۲.۴ سال نوری', type:'کوتوله سرخ', mag:'۹.۹' },
+  { name:'تاو نهنگ', dist:'۱۱.۹ سال نوری', type:'شبیه خورشید', mag:'۳.۵' }
+];
+
 // ============================================================
-//   صحنه
+//   صحنه + Bloom
 // ============================================================
 const scene = new THREE.Scene();
-const camera = new THREE.PerspectiveCamera(60, innerWidth/innerHeight, 0.1, 12000);
+const camera = new THREE.PerspectiveCamera(60, innerWidth/innerHeight, 0.1, 20000);
 const renderer = new THREE.WebGLRenderer({ antialias: true, preserveDrawingBuffer: true });
 renderer.setSize(innerWidth, innerHeight);
 renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 1.1;
 document.body.appendChild(renderer.domElement);
 
 const labelRenderer = new THREE.CSS2DRenderer();
@@ -455,88 +542,258 @@ labelRenderer.domElement.style.top = '0';
 labelRenderer.domElement.style.pointerEvents = 'none';
 document.body.appendChild(labelRenderer.domElement);
 
+// Bloom
+let composer, bloomPass;
+try {
+  composer = new THREE.EffectComposer(renderer);
+  composer.addPass(new THREE.RenderPass(scene, camera));
+  bloomPass = new THREE.UnrealBloomPass(new THREE.Vector2(innerWidth, innerHeight), 0.7, 0.5, 0.85);
+  composer.addPass(bloomPass);
+} catch(e) { console.warn('Bloom unavailable'); }
+
 const raycaster = new THREE.Raycaster();
 const mouseNDC = new THREE.Vector2();
 
-scene.add(new THREE.AmbientLight(0xffffff, 0.35));
-const sunLight = new THREE.PointLight(0xffffee, 3.5, 0, 1.3);
+scene.add(new THREE.AmbientLight(0xffffff, 0.28));
+const sunLight = new THREE.PointLight(0xffffee, 4, 0, 1.2);
 scene.add(sunLight);
 
 // ============================================================
-//   بافت‌ها
+//   بافت‌ساز پیشرفته — خیلی خوشگل‌تر
 // ============================================================
-function makeTexture(baseColor, glowColor, type) {
+function noise(x, y, seed) {
+  // نویز شبه‌تصادفی
+  const n = Math.sin(x * 12.9898 + y * 78.233 + seed) * 43758.5453;
+  return n - Math.floor(n);
+}
+
+function fbm(x, y, oct, seed) {
+  let v = 0, a = 0.5, f = 1;
+  for (let i = 0; i < oct; i++) {
+    const xi = Math.floor(x * f), yi = Math.floor(y * f);
+    const xf = x * f - xi, yf = y * f - yi;
+    const u = xf*xf*(3-2*xf), vv = yf*yf*(3-2*yf);
+    const a00 = noise(xi, yi, seed);
+    const a10 = noise(xi+1, yi, seed);
+    const a01 = noise(xi, yi+1, seed);
+    const a11 = noise(xi+1, yi+1, seed);
+    v += a * ((a00*(1-u)+a10*u)*(1-vv) + (a01*(1-u)+a11*u)*vv);
+    a *= 0.5; f *= 2;
+  }
+  return v;
+}
+
+function makeRockyTexture(baseColor, variation, type) {
   const c = document.createElement('canvas');
-  c.width = 512; c.height = 512;
+  c.width = 1024; c.height = 512;
   const x = c.getContext('2d');
-  x.fillStyle = '#' + baseColor.toString(16).padStart(6, '0');
-  x.fillRect(0, 0, 512, 512);
-  if (type === 'earth') {
-    x.fillStyle = '#1a4a1a';
-    [[80,150,60,40],[200,120,80,50],[320,180,70,45],[150,280,90,60],
-     [350,300,60,40],[420,200,50,30],[90,350,70,50],[250,400,80,40]]
-    .forEach(([px,py,w,h]) => { x.beginPath(); x.ellipse(px,py,w,h,Math.random()*Math.PI,0,Math.PI*2); x.fill(); });
-    x.fillStyle = 'rgba(255,255,255,0.35)';
-    for (let i = 0; i < 25; i++) {
-      x.beginPath();
-      x.ellipse(Math.random()*512, Math.random()*512, 20+Math.random()*40, 10+Math.random()*15, Math.random()*Math.PI, 0, Math.PI*2);
-      x.fill();
-    }
-  } else if (type === 'jupiter' || type === 'saturn') {
-    const stripes = type === 'jupiter' ? 16 : 12;
-    for (let i = 0; i < stripes; i++) {
-      const y = (i/stripes)*512, h = 512/stripes;
-      x.fillStyle = `rgba(255,220,180,${Math.abs(Math.sin(i*1.3)*0.15 + 0.05)})`;
-      x.fillRect(0, y, 512, h);
-    }
-    if (type === 'jupiter') {
-      x.fillStyle = 'rgba(200,80,60,0.85)';
-      x.beginPath(); x.ellipse(350, 300, 45, 28, 0, 0, Math.PI*2); x.fill();
-    }
-  } else if (type === 'mars') {
-    x.fillStyle = 'rgba(120,50,30,0.6)';
-    for (let i = 0; i < 35; i++) {
-      x.beginPath();
-      x.ellipse(Math.random()*512, Math.random()*512, 10+Math.random()*40, 8+Math.random()*20, Math.random()*Math.PI, 0, Math.PI*2);
-      x.fill();
-    }
-    x.fillStyle = 'rgba(255,255,255,0.7)';
-    x.fillRect(0, 0, 512, 30); x.fillRect(0, 482, 512, 30);
-  } else if (type === 'venus') {
-    x.fillStyle = 'rgba(255,240,200,0.4)';
-    for (let i = 0; i < 45; i++) {
-      x.beginPath();
-      x.ellipse(Math.random()*512, Math.random()*512, 20+Math.random()*50, 10+Math.random()*20, Math.random()*Math.PI, 0, Math.PI*2);
-      x.fill();
-    }
-  } else {
-    for (let i = 0; i < 30; i++) {
-      x.fillStyle = `rgba(0,0,0,${0.05 + Math.random()*0.15})`;
-      x.beginPath();
-      x.ellipse(Math.random()*512, Math.random()*512, 10+Math.random()*40, 8+Math.random()*25, Math.random()*Math.PI, 0, Math.PI*2);
-      x.fill();
+  const r0 = (baseColor >> 16) & 255, g0 = (baseColor >> 8) & 255, b0 = baseColor & 255;
+  const img = x.createImageData(1024, 512);
+  const d = img.data;
+
+  for (let j = 0; j < 512; j++) {
+    for (let i = 0; i < 1024; i++) {
+      const u = i / 1024, v = j / 512;
+      let n = fbm(u * 6, v * 6, 6, 1234) * variation;
+      if (type === 'mercury' || type === 'moon') {
+        // دهانه‌های برخوردی
+        const crater = fbm(u * 20, v * 20, 3, 5678);
+        if (crater > 0.75) n -= 0.35;
+        if (crater < 0.25) n += 0.15;
+      }
+      const f = 1 + n;
+      const idx = (j * 1024 + i) * 4;
+      d[idx]     = Math.max(0, Math.min(255, r0 * f));
+      d[idx + 1] = Math.max(0, Math.min(255, g0 * f));
+      d[idx + 2] = Math.max(0, Math.min(255, b0 * f));
+      d[idx + 3] = 255;
     }
   }
+  x.putImageData(img, 0, 0);
   const t = new THREE.CanvasTexture(c);
-  t.anisotropy = 8;
+  t.anisotropy = 16;
+  t.wrapS = THREE.RepeatWrapping;
   return t;
 }
 
-function makeSunTexture() {
+function makeEarthTexture() {
   const c = document.createElement('canvas');
-  c.width = 512; c.height = 512;
+  c.width = 2048; c.height = 1024;
   const x = c.getContext('2d');
-  const g = x.createRadialGradient(256, 256, 0, 256, 256, 256);
-  g.addColorStop(0, '#fff5a0'); g.addColorStop(0.5, '#ffcc33'); g.addColorStop(1, '#ff8800');
-  x.fillStyle = g; x.fillRect(0, 0, 512, 512);
-  for (let i = 0; i < 70; i++) {
-    x.fillStyle = `rgba(255,150,0,${0.2+Math.random()*0.4})`;
+  // اقیانوس با عمق متغیر
+  const g = x.createLinearGradient(0, 0, 0, 1024);
+  g.addColorStop(0, '#0a2a5e');
+  g.addColorStop(0.5, '#1a4a8a');
+  g.addColorStop(1, '#0a2a5e');
+  x.fillStyle = g;
+  x.fillRect(0, 0, 2048, 1024);
+
+  // قاره‌ها با نویز
+  const img = x.getImageData(0, 0, 2048, 1024);
+  const d = img.data;
+  for (let j = 0; j < 1024; j++) {
+    for (let i = 0; i < 2048; i++) {
+      const u = i / 2048, v = j / 1024;
+      // نویز برای قاره
+      let land = fbm(u * 4, v * 4, 7, 111);
+      // ارتفاع: قطب‌ها + نویز
+      const latFactor = Math.abs(v - 0.5) * 2;
+      land += latFactor * 0.1;
+
+      const idx = (j * 2048 + i) * 4;
+      if (land > 0.52) {
+        // خشکی
+        const green = land * 0.9;
+        d[idx]     = 30 + Math.floor((land - 0.52) * 200);
+        d[idx + 1] = 70 + Math.floor(green * 120);
+        d[idx + 2] = 20 + Math.floor((1 - land) * 50);
+        // بیابان
+        if (land > 0.6 && latFactor > 0.2 && latFactor < 0.55) {
+          d[idx]     = 180 + Math.floor(Math.random() * 30);
+          d[idx + 1] = 150 + Math.floor(Math.random() * 30);
+          d[idx + 2] = 90;
+        }
+        // قطب یخ
+        if (latFactor > 0.85) {
+          d[idx] = 230; d[idx+1] = 240; d[idx+2] = 250;
+        }
+      } else if (land > 0.48) {
+        // ساحل
+        d[idx]     = 20 + Math.floor(land * 40);
+        d[idx + 1] = 90 + Math.floor(land * 40);
+        d[idx + 2] = 130 + Math.floor(land * 50);
+      } else {
+        // اقیانوس عمیق
+        const depth = (0.48 - land) / 0.48;
+        d[idx]     = 10 + Math.floor((1 - depth) * 30);
+        d[idx + 1] = 40 + Math.floor((1 - depth) * 60);
+        d[idx + 2] = 80 + Math.floor((1 - depth) * 80);
+      }
+      d[idx + 3] = 255;
+    }
+  }
+  x.putImageData(img, 0, 0);
+  const t = new THREE.CanvasTexture(c);
+  t.anisotropy = 16;
+  return t;
+}
+
+function makeEarthClouds() {
+  const c = document.createElement('canvas');
+  c.width = 2048; c.height = 1024;
+  const x = c.getContext('2d');
+  const img = x.createImageData(2048, 1024);
+  const d = img.data;
+  for (let j = 0; j < 1024; j++) {
+    for (let i = 0; i < 2048; i++) {
+      const u = i / 2048, v = j / 1024;
+      const n = fbm(u * 8 + 100, v * 8, 6, 333);
+      const a = Math.max(0, (n - 0.5) * 3) * 255;
+      const idx = (j * 2048 + i) * 4;
+      d[idx] = 255; d[idx+1] = 255; d[idx+2] = 255;
+      d[idx+3] = Math.min(255, a);
+    }
+  }
+  x.putImageData(img, 0, 0);
+  const t = new THREE.CanvasTexture(c);
+  t.anisotropy = 16;
+  return t;
+}
+
+function makeEarthLights() {
+  const c = document.createElement('canvas');
+  c.width = 2048; c.height = 1024;
+  const x = c.getContext('2d');
+  x.fillStyle = '#000';
+  x.fillRect(0, 0, 2048, 1024);
+  // شهرها رو روی خشکی‌ها بذاریم
+  const earthTex = makeEarthTexture();
+  const ec = earthTex.image;
+  const ecx = ec.getContext('2d');
+  const eimg = ecx.getImageData(0, 0, 2048, 1024).data;
+  const img = x.getImageData(0, 0, 2048, 1024);
+  const d = img.data;
+  for (let j = 0; j < 1024; j++) {
+    for (let i = 0; i < 2048; i++) {
+      const idx = (j * 2048 + i) * 4;
+      // اگه خشکیه، احتمال چراغ شهر
+      const isLand = eimg[idx+1] > 60 && eimg[idx] < 150;
+      if (isLand && Math.random() < 0.008) {
+        d[idx] = 255;
+        d[idx+1] = 220;
+        d[idx+2] = 130;
+        d[idx+3] = 255;
+      }
+    }
+  }
+  x.putImageData(img, 0, 0);
+  const t = new THREE.CanvasTexture(c);
+  t.anisotropy = 16;
+  return t;
+}
+
+function makeGasGiantTexture(baseColor, bands, spot) {
+  const c = document.createElement('canvas');
+  c.width = 2048; c.height = 1024;
+  const x = c.getContext('2d');
+  const r0 = (baseColor >> 16) & 255, g0 = (baseColor >> 8) & 255, b0 = baseColor & 255;
+
+  for (let j = 0; j < 1024; j++) {
+    const v = j / 1024;
+    // نوارها
+    let band = Math.sin(v * bands * Math.PI) * 0.15;
+    band += fbm(0, v * 20, 4, 99) * 0.12 - 0.06;
+    // نویز در طول جغرافیایی
+    for (let i = 0; i < 2048; i++) {
+      const u = i / 2048;
+      const turb = fbm(u * 12, v * 30, 4, 777) * 0.1 - 0.05;
+      const f = 1 + band + turb;
+      const idx = (j * 2048 + i) * 4;
+      d_set(x, i, j, r0 * f, g0 * f, b0 * f);
+    }
+  }
+  function d_set(ctx, i, j, r, g, b) {
+    ctx.fillStyle = `rgb(${Math.max(0,Math.min(255,r))},${Math.max(0,Math.min(255,g))},${Math.max(0,Math.min(255,b))})`;
+    ctx.fillRect(i, j, 1, 1);
+  }
+  // لکه سرخ مشتری
+  if (spot) {
+    const grd = x.createRadialGradient(1500, 620, 20, 1500, 620, 140);
+    grd.addColorStop(0, 'rgba(180,60,40,0.95)');
+    grd.addColorStop(0.6, 'rgba(200,90,60,0.7)');
+    grd.addColorStop(1, 'rgba(180,100,70,0)');
+    x.fillStyle = grd;
     x.beginPath();
-    x.ellipse(Math.random()*512, Math.random()*512, 10+Math.random()*40, 10+Math.random()*30, Math.random()*Math.PI, 0, Math.PI*2);
+    x.ellipse(1500, 620, 140, 90, 0, 0, Math.PI * 2);
     x.fill();
   }
   const t = new THREE.CanvasTexture(c);
-  t.anisotropy = 8;
+  t.anisotropy = 16;
+  return t;
+}
+
+function makeSunTexture2() {
+  const c = document.createElement('canvas');
+  c.width = 1024; c.height = 512;
+  const x = c.getContext('2d');
+  const img = x.createImageData(1024, 512);
+  const d = img.data;
+  for (let j = 0; j < 512; j++) {
+    for (let i = 0; i < 1024; i++) {
+      const u = i / 1024, v = j / 512;
+      const n = fbm(u * 8, v * 8, 5, 42);
+      const n2 = fbm(u * 20, v * 20, 3, 77);
+      const intensity = 0.7 + n * 0.3 + n2 * 0.15;
+      const idx = (j * 1024 + i) * 4;
+      d[idx]     = Math.min(255, 255 * intensity);
+      d[idx + 1] = Math.min(255, 180 * intensity + 40);
+      d[idx + 2] = Math.min(255, 50 * intensity);
+      d[idx + 3] = 255;
+    }
+  }
+  x.putImageData(img, 0, 0);
+  const t = new THREE.CanvasTexture(c);
+  t.anisotropy = 16;
   return t;
 }
 
@@ -544,7 +801,7 @@ function makeSunTexture() {
 //   پس‌زمینه
 // ============================================================
 function createMilkyWay() {
-  const count = 10000;
+  const count = 12000;
   const pos = new Float32Array(count * 3);
   const col = new Float32Array(count * 3);
   for (let i = 0; i < count; i++) {
@@ -568,8 +825,9 @@ function createMilkyWay() {
 }
 
 function createStars() {
-  const count = 8000;
+  const count = 10000;
   const pos = new Float32Array(count * 3);
+  const col = new Float32Array(count * 3);
   for (let i = 0; i < count; i++) {
     const r = 300 + Math.random() * 700;
     const th = Math.random() * Math.PI * 2;
@@ -577,17 +835,23 @@ function createStars() {
     pos[i*3] = r * Math.sin(ph) * Math.cos(th);
     pos[i*3+1] = r * Math.cos(ph);
     pos[i*3+2] = r * Math.sin(ph) * Math.sin(th);
+    const t = Math.random();
+    if (t < 0.5) { col[i*3]=1; col[i*3+1]=1; col[i*3+2]=1; }
+    else if (t < 0.7) { col[i*3]=0.7; col[i*3+1]=0.85; col[i*3+2]=1; }
+    else if (t < 0.9) { col[i*3]=1; col[i*3+1]=0.9; col[i*3+2]=0.7; }
+    else { col[i*3]=1; col[i*3+1]=0.7; col[i*3+2]=0.6; }
   }
   const geo = new THREE.BufferGeometry();
   geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+  geo.setAttribute('color', new THREE.BufferAttribute(col, 3));
   scene.add(new THREE.Points(geo, new THREE.PointsMaterial({
-    color: 0xffffff, size: 0.6, transparent: true, opacity: 0.9
+    color: 0xffffff, size: 0.7, vertexColors: true, transparent: true, opacity: 0.95
   })));
 }
 
 function createNebula() {
   [0xff44aa, 0x44aaff, 0xaa44ff, 0xff6644].forEach(color => {
-    const count = 800;
+    const count = 700;
     const pos = new Float32Array(count * 3);
     const bx = (Math.random() - 0.5) * 3000, by = (Math.random() - 0.5) * 1500, bz = (Math.random() - 0.5) * 3000;
     for (let i = 0; i < count; i++) {
@@ -601,7 +865,7 @@ function createNebula() {
     const geo = new THREE.BufferGeometry();
     geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
     scene.add(new THREE.Points(geo, new THREE.PointsMaterial({
-      color, size: 8, transparent: true, opacity: 0.08,
+      color, size: 10, transparent: true, opacity: 0.07,
       sizeAttenuation: true, depthWrite: false, blending: THREE.AdditiveBlending
     })));
   });
@@ -609,22 +873,21 @@ function createNebula() {
 
 function createConstellations() {
   const group = new THREE.Group();
-  scene.add(group);
   const constellations = [
-    { stars: [[-40,40,-60],[-30,42,-62],[-20,44,-64],[-10,45,-65],[-2,44,-64],[4,42,-62],[6,40,-60]] },
-    { stars: [[-20,30,50],[-15,32,50],[-10,34,50],[-15,29,50],[-12,27,50],[-8,25,50],[-18,25,50]] },
-    { stars: [[60,35,40],[55,38,42],[50,40,44],[45,42,42],[42,40,38]] },
-    { stars: [[30,45,-70],[35,46,-72],[40,48,-73],[44,49,-73],[48,48,-72],[50,46,-70],[50,44,-68]] }
+    [[-40,40,-60],[-30,42,-62],[-20,44,-64],[-10,45,-65],[-2,44,-64],[4,42,-62],[6,40,-60]],
+    [[-20,30,50],[-15,32,50],[-10,34,50],[-15,29,50],[-12,27,50],[-8,25,50],[-18,25,50]],
+    [[60,35,40],[55,38,42],[50,40,44],[45,42,42],[42,40,38]],
+    [[30,45,-70],[35,46,-72],[40,48,-73],[44,49,-73],[48,48,-72],[50,46,-70],[50,44,-68]]
   ];
   constellations.forEach(c => {
-    const pts = c.stars.map(s => new THREE.Vector3(...s));
+    const pts = c.map(s => new THREE.Vector3(...s));
     group.add(new THREE.Line(
       new THREE.BufferGeometry().setFromPoints(pts),
-      new THREE.LineBasicMaterial({ color: 0x88ccff, transparent: true, opacity: 0.6 })
+      new THREE.LineBasicMaterial({ color: 0x88ccff, transparent: true, opacity: 0.5 })
     ));
     pts.forEach(p => {
       const star = new THREE.Mesh(
-        new THREE.SphereGeometry(0.3, 8, 8),
+        new THREE.SphereGeometry(0.25, 8, 8),
         new THREE.MeshBasicMaterial({ color: 0xffffff })
       );
       star.position.copy(p);
@@ -632,108 +895,241 @@ function createConstellations() {
     });
   });
   group.visible = false;
+  scene.add(group);
   return group;
 }
-let constellationGroup;
 
 // ============================================================
 //   خورشید
 // ============================================================
-let sun, sunGlow;
+let sun, sunGlow, corona;
 function createSun() {
   sun = new THREE.Mesh(
-    new THREE.SphereGeometry(3.5, 64, 64),
-    new THREE.MeshBasicMaterial({ map: makeSunTexture() })
+    new THREE.SphereGeometry(3.5, 96, 96),
+    new THREE.MeshBasicMaterial({ map: makeSunTexture2() })
   );
   sun.userData = {
     isSun: true, name: 'خورشید',
     info: {
       name:'خورشید', en:'Sun', color:0xffcc00,
       diameter:'۱,۳۹۲,۷۰۰ کیلومتر', distance:'مرکز منظومه',
-      year:'—', day:'۲۵ روز', moons:'۸ سیاره', temp:'۵,۵۰۰°',
+      year:'—', day:'۲۵ روز', moons:'۸ سیاره', temp:'۵,۵۰۰°', gravity:'۲۷۴',
       fact:'۹۹.۸۶٪ جرم منظومه شمسی رو خورشید تشکیل می‌ده.'
     }
   };
   scene.add(sun);
+
+  // هاله ۱
   sunGlow = new THREE.Mesh(
-    new THREE.SphereGeometry(4.3, 32, 32),
-    new THREE.MeshBasicMaterial({ color: 0xffaa00, transparent: true, opacity: 0.2 })
+    new THREE.SphereGeometry(4.2, 48, 48),
+    new THREE.MeshBasicMaterial({
+      color: 0xffaa00, transparent: true, opacity: 0.35,
+      blending: THREE.AdditiveBlending
+    })
   );
   scene.add(sunGlow);
-  const g2 = new THREE.Mesh(
-    new THREE.SphereGeometry(5.2, 32, 32),
-    new THREE.MeshBasicMaterial({ color: 0xff8800, transparent: true, opacity: 0.1 })
+
+  // هاله ۲ (بیرونی‌تر)
+  const glow2 = new THREE.Mesh(
+    new THREE.SphereGeometry(5.5, 32, 32),
+    new THREE.MeshBasicMaterial({
+      color: 0xff7700, transparent: true, opacity: 0.15,
+      blending: THREE.AdditiveBlending
+    })
   );
-  scene.add(g2);
-  sunGlow.userData.glow2 = g2;
+  scene.add(glow2);
+  sunGlow.userData.glow2 = glow2;
+
+  // کرونا (شعله‌های بزرگ)
+  corona = new THREE.Mesh(
+    new THREE.SphereGeometry(7, 32, 32),
+    new THREE.MeshBasicMaterial({
+      color: 0xff5500, transparent: true, opacity: 0.06,
+      blending: THREE.AdditiveBlending, side: THREE.BackSide
+    })
+  );
+  scene.add(corona);
+
+  // نور نقطه‌ای برای روشنایی
+  const sunL = new THREE.PointLight(0xffeecc, 4, 0, 1.2);
+  scene.add(sunL);
 }
 
 // ============================================================
-//   سیارات
+//   سیارات — با بافت خیلی دقیق‌تر
 // ============================================================
 const clickables = [];
 const orbitLines = [];
 const labelDivs = [];
 const trailLines = [];
+const planetRefs = {};
 
 function createPlanets() {
   [...PLANETS, ...DWARFS].forEach(data => {
+    // مدار بیضی
+    const e = ORBIT_ECC[data.name] || 0;
     const pts = [];
-    for (let i = 0; i <= 200; i++) {
-      const a = (i/200) * Math.PI * 2;
-      pts.push(new THREE.Vector3(Math.cos(a)*data.dist, 0, Math.sin(a)*data.dist));
+    for (let i = 0; i <= 256; i++) {
+      const a = (i/256) * Math.PI * 2;
+      // معادله بیضی: r = a(1-e²)/(1+e cos θ)
+      const r = data.dist * (1 - e*e) / (1 + e * Math.cos(a));
+      pts.push(new THREE.Vector3(Math.cos(a)*r, 0, Math.sin(a)*r));
     }
     const orbit = new THREE.Line(
       new THREE.BufferGeometry().setFromPoints(pts),
-      new THREE.LineBasicMaterial({ color: 0x4477aa, transparent: true, opacity: 0.3 })
+      new THREE.LineBasicMaterial({ color: 0x4477aa, transparent: true, opacity: 0.35 })
     );
     scene.add(orbit);
     orbitLines.push(orbit);
 
-    const tex = makeTexture(data.color, data.glow, data.en.toLowerCase());
-    const mesh = new THREE.Mesh(
-      new THREE.SphereGeometry(data.size, 48, 48),
-      new THREE.MeshStandardMaterial({
-        map: tex, roughness: 0.9, metalness: 0.05,
-        emissive: data.color, emissiveIntensity: 0.1
-      })
-    );
+    // بافت اختصاصی هر سیاره
+    let map;
+    const key = data.en.toLowerCase();
+    if (key === 'earth') map = makeEarthTexture();
+    else if (key === 'jupiter') map = makeGasGiantTexture(data.color, 22, true);
+    else if (key === 'saturn') map = makeGasGiantTexture(data.color, 18, false);
+    else if (key === 'uranus' || key === 'neptune') map = makeGasGiantTexture(data.color, 8, false);
+    else if (key === 'venus') map = makeGasGiantTexture(data.color, 10, false);
+    else if (key === 'mars') {
+      // مریخ با قطب‌های یخی
+      const c = document.createElement('canvas');
+      c.width = 1024; c.height = 512;
+      const x = c.getContext('2d');
+      x.drawImage(makeRockyTexture(data.color, 0.35, 'mars').image, 0, 0);
+      // کلاهک قطبی شمالی
+      x.fillStyle = 'rgba(240,240,250,0.9)';
+      x.beginPath();
+      x.ellipse(512, 30, 200, 50, 0, 0, Math.PI * 2);
+      x.fill();
+      // کلاهک جنوبی
+      x.beginPath();
+      x.ellipse(512, 482, 150, 40, 0, 0, Math.PI * 2);
+      x.fill();
+      map = new THREE.CanvasTexture(c);
+      map.anisotropy = 16;
+    }
+    else map = makeRockyTexture(data.color, 0.25, key);
+
+    const mat = new THREE.MeshStandardMaterial({
+      map: map, roughness: 0.92, metalness: 0.02,
+      emissive: data.color, emissiveIntensity: 0.04
+    });
+    const mesh = new THREE.Mesh(new THREE.SphereGeometry(data.size, 64, 64), mat);
     const baseAngle = Math.random() * Math.PI * 2;
     mesh.userData = {
       ...data, baseAngle: baseAngle, angle: baseAngle,
       isPlanet: true, isDwarf: DWARFS.includes(data),
-      moonMeshes: [],
+      moonMeshes: [], eccentricity: e,
       info: {
         name: data.name, en: data.en, color: data.color,
         diameter: data.diameter, distance: data.distance,
         year: data.year, day: data.day, moons: data.moons,
-        temp: data.temp, fact: data.fact
+        temp: data.temp, gravity: data.gravity, fact: data.fact
       }
     };
     mesh.rotation.z = data.tilt;
     scene.add(mesh);
     clickables.push(mesh);
+    planetRefs[data.name] = mesh;
 
-    if (data.en === 'Saturn') {
-      const c = document.createElement('canvas');
-      c.width = 512; c.height = 64;
-      const cx = c.getContext('2d');
-      for (let i = 0; i < 512; i++) {
-        cx.fillStyle = `rgba(220,190,130,${0.3 + Math.sin(i*0.1)*0.3 + Math.random()*0.2})`;
-        cx.fillRect(i, 0, 1, 64);
-      }
-      const ring = new THREE.Mesh(
-        new THREE.RingGeometry(data.size*1.3, data.size*2.2, 128),
-        new THREE.MeshBasicMaterial({ map: new THREE.CanvasTexture(c), side: THREE.DoubleSide, transparent: true, opacity: 0.85 })
+    // زمین: ابرها + چراغ شهر
+    if (key === 'earth') {
+      const cloudMesh = new THREE.Mesh(
+        new THREE.SphereGeometry(data.size * 1.005, 64, 64),
+        new THREE.MeshStandardMaterial({
+          map: makeEarthClouds(), transparent: true, opacity: 0.9,
+          depthWrite: false, roughness: 1
+        })
       );
-      ring.rotation.x = Math.PI/2 + 0.3;
+      mesh.add(cloudMesh);
+      mesh.userData.cloudMesh = cloudMesh;
+
+      const nightLights = new THREE.Mesh(
+        new THREE.SphereGeometry(data.size * 1.002, 64, 64),
+        new THREE.MeshBasicMaterial({
+          map: makeEarthLights(), transparent: true, opacity: 0.9,
+          blending: THREE.AdditiveBlending, depthWrite: false
+        })
+      );
+      mesh.add(nightLights);
+      mesh.userData.nightLights = nightLights;
+
+      // جو زمین
+      const atmo = new THREE.Mesh(
+        new THREE.SphereGeometry(data.size * 1.08, 64, 64),
+        new THREE.MeshBasicMaterial({
+          color: 0x5aafff, transparent: true, opacity: 0.18,
+          blending: THREE.AdditiveBlending, side: THREE.BackSide
+        })
+      );
+      mesh.add(atmo);
+
+      // هاله‌ی جو (دو لایه)
+      const atmo2 = new THREE.Mesh(
+        new THREE.SphereGeometry(data.size * 1.15, 48, 48),
+        new THREE.MeshBasicMaterial({
+          color: 0x3a8fdf, transparent: true, opacity: 0.08,
+          blending: THREE.AdditiveBlending, side: THREE.BackSide
+        })
+      );
+      mesh.add(atmo2);
+    }
+
+    // زحل: حلقه‌ی دقیق‌تر با شکاف
+    if (key === 'saturn') {
+      const ringCanvas = document.createElement('canvas');
+      ringCanvas.width = 1024; ringCanvas.height = 64;
+      const rx = ringCanvas.getContext('2d');
+      for (let i = 0; i < 1024; i++) {
+        const f = i / 1024;
+        let alpha = 0.75;
+        // شکاف کاسینی
+        if (f > 0.42 && f < 0.48) alpha = 0.1;
+        // شکاف انکه
+        if (f > 0.7 && f < 0.72) alpha = 0.3;
+        // نویز
+        const n = 0.6 + Math.sin(i * 0.15) * 0.15 + Math.random() * 0.15;
+        const bright = 180 + Math.sin(i * 0.1) * 30;
+        rx.fillStyle = `rgba(${bright}, ${bright-30}, ${bright-70}, ${alpha * n})`;
+        rx.fillRect(i, 0, 1, 64);
+      }
+      const ringTex = new THREE.CanvasTexture(ringCanvas);
+      ringTex.anisotropy = 16;
+      const ringGeo = new THREE.RingGeometry(data.size * 1.35, data.size * 2.4, 256);
+      // UV اصلاح‌شده برای رینگ
+      const pos = ringGeo.attributes.position;
+      const uv = ringGeo.attributes.uv;
+      const v3 = new THREE.Vector3();
+      for (let i = 0; i < pos.count; i++) {
+        v3.fromBufferAttribute(pos, i);
+        const r = v3.length();
+        uv.setXY(i, (r - data.size * 1.35) / (data.size * 1.05), 0.5);
+      }
+      const ring = new THREE.Mesh(ringGeo, new THREE.MeshBasicMaterial({
+        map: ringTex, side: THREE.DoubleSide, transparent: true, opacity: 0.92, depthWrite: false
+      }));
+      ring.rotation.x = Math.PI / 2 + 0.42;
       mesh.add(ring);
     }
 
+    // جو برای غول‌های گازی
+    if (['jupiter','saturn','uranus','neptune'].includes(key)) {
+      const atmoColor = { jupiter: 0xffaa66, saturn: 0xffcc88, uranus: 0x88ddff, neptune: 0x5577dd }[key];
+      const atmo = new THREE.Mesh(
+        new THREE.SphereGeometry(data.size * 1.06, 48, 48),
+        new THREE.MeshBasicMaterial({
+          color: atmoColor, transparent: true, opacity: 0.12,
+          blending: THREE.AdditiveBlending, side: THREE.BackSide
+        })
+      );
+      mesh.add(atmo);
+    }
+
+    // دنباله
     const trailGeo = new THREE.BufferGeometry();
     trailGeo.setAttribute('position', new THREE.BufferAttribute(new Float32Array(300 * 3), 3));
     const trail = new THREE.Line(trailGeo, new THREE.LineBasicMaterial({
-      color: data.glow, transparent: true, opacity: 0.6
+      color: data.glow, transparent: true, opacity: 0.5
     }));
     trail.visible = false;
     trail.userData.positions = [];
@@ -741,6 +1137,7 @@ function createPlanets() {
     trailLines.push(trail);
     mesh.userData.trail = trail;
 
+    // برچسب
     const div = document.createElement('div');
     div.className = 'label' + (DWARFS.includes(data) ? ' dwarf' : '');
     div.textContent = data.name;
@@ -753,11 +1150,11 @@ function createPlanets() {
 
 function createMoons() {
   FAMOUS_MOONS.forEach(m => {
-    const parentMesh = clickables.find(p => p.userData.name === m.parent);
+    const parentMesh = planetRefs[m.parent];
     if (!parentMesh) return;
     const moon = new THREE.Mesh(
-      new THREE.SphereGeometry(m.size, 24, 24),
-      new THREE.MeshStandardMaterial({ map: makeTexture(m.color, 0xffffff, 'moon'), roughness: 0.9 })
+      new THREE.SphereGeometry(m.size, 32, 32),
+      new THREE.MeshStandardMaterial({ map: makeRockyTexture(m.color, 0.3, 'moon'), roughness: 0.95 })
     );
     moon.userData = { angle: Math.random()*Math.PI*2, speed: m.speed, dist: m.dist, name: m.name, isMoon: true };
     parentMesh.add(moon);
@@ -776,7 +1173,7 @@ function createMoons() {
 //   کمربندها
 // ============================================================
 function createAsteroidBelt() {
-  const count = 2200;
+  const count = 2500;
   const pos = new Float32Array(count * 3);
   for (let i = 0; i < count; i++) {
     const r = 16 + Math.random() * 3;
@@ -787,11 +1184,11 @@ function createAsteroidBelt() {
   }
   const geo = new THREE.BufferGeometry();
   geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
-  scene.add(new THREE.Points(geo, new THREE.PointsMaterial({ color: 0x887766, size: 0.09, transparent: true, opacity: 0.85 })));
+  scene.add(new THREE.Points(geo, new THREE.PointsMaterial({ color: 0x887766, size: 0.1, transparent: true, opacity: 0.85 })));
 }
 
 function createKuiperBelt() {
-  const count = 2500;
+  const count = 3000;
   const pos = new Float32Array(count * 3);
   for (let i = 0; i < count; i++) {
     const r = 42 + Math.random() * 8;
@@ -802,7 +1199,7 @@ function createKuiperBelt() {
   }
   const geo = new THREE.BufferGeometry();
   geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
-  scene.add(new THREE.Points(geo, new THREE.PointsMaterial({ color: 0x88aacc, size: 0.12, transparent: true, opacity: 0.6 })));
+  scene.add(new THREE.Points(geo, new THREE.PointsMaterial({ color: 0x88aacc, size: 0.13, transparent: true, opacity: 0.6 })));
 }
 
 function createOortCloud() {
@@ -818,7 +1215,22 @@ function createOortCloud() {
   }
   const geo = new THREE.BufferGeometry();
   geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
-  scene.add(new THREE.Points(geo, new THREE.PointsMaterial({ color: 0xaaccee, size: 0.3, transparent: true, opacity: 0.35 })));
+  scene.add(new THREE.Points(geo, new THREE.PointsMaterial({ color: 0xaaccee, size: 0.3, transparent: true, opacity: 0.3 })));
+}
+
+// کمربند حیات
+let habitableZone;
+function createHabitableZone() {
+  const inner = 9.5, outer = 14;
+  const geo = new THREE.RingGeometry(inner, outer, 128);
+  const mat = new THREE.MeshBasicMaterial({
+    color: 0x44ff88, transparent: true, opacity: 0.15,
+    side: THREE.DoubleSide, depthWrite: false
+  });
+  habitableZone = new THREE.Mesh(geo, mat);
+  habitableZone.rotation.x = Math.PI / 2;
+  habitableZone.visible = false;
+  scene.add(habitableZone);
 }
 
 // ============================================================
@@ -829,36 +1241,35 @@ function createBlackHole() {
   const group = new THREE.Group();
   group.position.set(-120, 30, -100);
 
-  const bh = new THREE.Mesh(
+  group.add(new THREE.Mesh(
     new THREE.SphereGeometry(3, 32, 32),
     new THREE.MeshBasicMaterial({ color: 0x000000 })
-  );
-  group.add(bh);
+  ));
 
   const halo = new THREE.Mesh(
-    new THREE.RingGeometry(3, 4.5, 64),
+    new THREE.RingGeometry(3, 4.5, 96),
     new THREE.MeshBasicMaterial({
       color: 0xff6600, side: THREE.DoubleSide,
-      transparent: true, opacity: 0.7, blending: THREE.AdditiveBlending
+      transparent: true, opacity: 0.8, blending: THREE.AdditiveBlending
     })
   );
   halo.rotation.x = Math.PI / 2.5;
   group.add(halo);
 
   const c = document.createElement('canvas');
-  c.width = 512; c.height = 128;
+  c.width = 1024; c.height = 128;
   const cx = c.getContext('2d');
-  for (let i = 0; i < 512; i++) {
-    const f = i / 512;
-    const a = Math.max(0, Math.sin(f * 20) * 0.4 + 0.4);
-    cx.fillStyle = `rgba(255,${Math.floor(80 + f * 150)},${Math.floor(20 + f * 60)},${a})`;
+  for (let i = 0; i < 1024; i++) {
+    const f = i / 1024;
+    const a = Math.max(0, Math.sin(f * 20) * 0.4 + 0.5);
+    cx.fillStyle = `rgba(255,${Math.floor(60 + f * 180)},${Math.floor(10 + f * 80)},${a})`;
     cx.fillRect(i, 0, 1, 128);
   }
   accretionDisk = new THREE.Mesh(
-    new THREE.RingGeometry(4.5, 12, 128),
+    new THREE.RingGeometry(4.5, 13, 256),
     new THREE.MeshBasicMaterial({
       map: new THREE.CanvasTexture(c), side: THREE.DoubleSide,
-      transparent: true, opacity: 0.85, blending: THREE.AdditiveBlending
+      transparent: true, opacity: 0.9, blending: THREE.AdditiveBlending, depthWrite: false
     })
   );
   accretionDisk.rotation.x = Math.PI / 2.5;
@@ -869,7 +1280,7 @@ function createBlackHole() {
     info: {
       name:'سیاه‌چاله', en:'Black Hole', color:0xff6600,
       diameter:'افق رویداد', distance:'خیلی دور',
-      year:'—', day:'—', moons:'—', temp:'بی‌نهایت',
+      year:'—', day:'—', moons:'—', temp:'بی‌نهایت', gravity:'بی‌نهایت',
       fact:'جاذبه‌اش آنقدر قویه که حتی نور هم نمی‌تونه فرار کنه.'
     }
   };
@@ -883,6 +1294,7 @@ function createBlackHole() {
   labelDivs.push(div);
 
   scene.add(group);
+  const bh = group.children[0];
   bh.userData = group.userData;
   clickables.push(bh);
 }
@@ -895,39 +1307,40 @@ function createBinaryStars() {
   const group = new THREE.Group();
   group.position.set(140, -20, 120);
 
-  const s1 = new THREE.Mesh(new THREE.SphereGeometry(2, 32, 32), new THREE.MeshBasicMaterial({ color: 0xffdd44 }));
-  const s2 = new THREE.Mesh(new THREE.SphereGeometry(1.6, 32, 32), new THREE.MeshBasicMaterial({ color: 0xff8844 }));
+  const s1 = new THREE.Mesh(new THREE.SphereGeometry(2, 48, 48),
+    new THREE.MeshBasicMaterial({ color: 0xffdd44 }));
+  const s2 = new THREE.Mesh(new THREE.SphereGeometry(1.6, 48, 48),
+    new THREE.MeshBasicMaterial({ color: 0xff8844 }));
   group.add(s1); group.add(s2);
+
+  const halo1 = new THREE.Mesh(new THREE.SphereGeometry(2.6, 24, 24),
+    new THREE.MeshBasicMaterial({ color: 0xffdd44, transparent: true, opacity: 0.3, blending: THREE.AdditiveBlending }));
+  s1.add(halo1);
+  const halo2 = new THREE.Mesh(new THREE.SphereGeometry(2.1, 24, 24),
+    new THREE.MeshBasicMaterial({ color: 0xff8844, transparent: true, opacity: 0.3, blending: THREE.AdditiveBlending }));
+  s2.add(halo2);
 
   const light1 = new THREE.PointLight(0xffdd44, 1.5, 40);
   const light2 = new THREE.PointLight(0xff8844, 1.5, 40);
   group.add(light1); group.add(light2);
 
   group.userData = { s1, s2, light1, light2, angle: 0, radius: 5, speed: 0.02 };
-
-  const div = document.createElement('div');
-  div.className = 'label special';
-  div.textContent = 'ستاره دوتایی';
-  const label = new THREE.CSS2DObject(div);
-  label.position.set(0, 4, 0);
-  group.add(label);
-  labelDivs.push(div);
-
   scene.add(group);
   binaryStars.push(group);
+
   s1.userData = {
     name: 'ستاره دوتایی', isBinary: true,
     info: {
       name:'ستاره دوتایی', en:'Binary Star', color:0xffdd44,
       diameter:'—', distance:'خیلی دور', year:'—', day:'—', moons:'—',
-      temp:'هزاران درجه', fact:'دو ستاره که دور مرکز جرم مشترک می‌چرخن.'
+      temp:'هزاران درجه', gravity:'—', fact:'دو ستاره که دور مرکز جرم مشترک می‌چرخن.'
     }
   };
   clickables.push(s1);
 }
 
 // ============================================================
-//   Trappist
+//   Trappist-1
 // ============================================================
 let trappist;
 function createTrappist() {
@@ -935,9 +1348,13 @@ function createTrappist() {
   group.position.set(-80, 40, 200);
 
   const star = new THREE.Mesh(
-    new THREE.SphereGeometry(0.8, 24, 24),
+    new THREE.SphereGeometry(0.8, 32, 32),
     new THREE.MeshBasicMaterial({ color: 0xff6633 })
   );
+  star.add(new THREE.Mesh(
+    new THREE.SphereGeometry(1.2, 24, 24),
+    new THREE.MeshBasicMaterial({ color: 0xff5522, transparent: true, opacity: 0.3, blending: THREE.AdditiveBlending })
+  ));
   group.add(star);
   group.add(new THREE.PointLight(0xff6633, 1, 15));
 
@@ -946,8 +1363,8 @@ function createTrappist() {
   for (let i = 0; i < 7; i++) {
     const r = 1.5 + i * 0.6;
     const p = new THREE.Mesh(
-      new THREE.SphereGeometry(0.12 + Math.random()*0.06, 16, 16),
-      new THREE.MeshStandardMaterial({ color: colors[i], emissive: colors[i], emissiveIntensity: 0.4 })
+      new THREE.SphereGeometry(0.12 + Math.random()*0.06, 24, 24),
+      new THREE.MeshStandardMaterial({ color: colors[i], emissive: colors[i], emissiveIntensity: 0.3 })
     );
     p.userData = { angle: Math.random()*Math.PI*2, dist: r, speed: 0.05 - i*0.005 };
     group.add(p);
@@ -976,7 +1393,7 @@ function createTrappist() {
     info: {
       name:'Trappist-1', en:'TRAPPIST-1', color:0xff6633,
       diameter:'کوتوله سرخ', distance:'۴۰ سال نوری',
-      year:'—', day:'—', moons:'۷ سیاره', temp:'۲,۵۰۰°',
+      year:'—', day:'—', moons:'۷ سیاره', temp:'۲,۵۰۰°', gravity:'—',
       fact:'۷ سیاره‌ی شبیه زمین داره که دور یه ستاره کوچک می‌چرخن.'
     }
   };
@@ -996,17 +1413,21 @@ function createSupernova() {
     new THREE.SphereGeometry(2, 32, 32),
     new THREE.MeshBasicMaterial({ color: 0xffffff })
   );
+  supernovaStar.add(new THREE.Mesh(
+    new THREE.SphereGeometry(2.8, 24, 24),
+    new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.2, blending: THREE.AdditiveBlending })
+  ));
   group.add(supernovaStar);
   group.add(new THREE.PointLight(0xffffff, 2, 30));
 
-  const pCount = 300;
+  const pCount = 400;
   const pGeo = new THREE.BufferGeometry();
   const pPos = new Float32Array(pCount * 3);
   const pVel = [];
   for (let i = 0; i < pCount; i++) {
     const th = Math.random() * Math.PI * 2;
     const ph = Math.acos((Math.random() * 2) - 1);
-    const speed = 8 + Math.random() * 12;
+    const speed = 8 + Math.random() * 14;
     pVel.push({
       x: Math.sin(ph) * Math.cos(th) * speed,
       y: Math.cos(ph) * speed,
@@ -1015,7 +1436,7 @@ function createSupernova() {
   }
   pGeo.setAttribute('position', new THREE.BufferAttribute(pPos, 3));
   supernovaParticles = new THREE.Points(pGeo, new THREE.PointsMaterial({
-    color: 0xffaa44, size: 0.8, transparent: true, opacity: 0
+    color: 0xffcc66, size: 1, transparent: true, opacity: 0, blending: THREE.AdditiveBlending
   }));
   supernovaParticles.userData.vel = pVel;
   group.add(supernovaParticles);
@@ -1034,7 +1455,7 @@ function createSupernova() {
     info: {
       name:'ستاره ابرنواختر', en:'Supernova Candidate', color:0xffffff,
       diameter:'—', distance:'خیلی دور', year:'—', day:'—', moons:'—',
-      temp:'میلیون‌ها درجه', fact:'ستاره‌ای که در آستانه‌ی انفجاره.'
+      temp:'میلیون‌ها درجه', gravity:'—', fact:'ستاره‌ای که در آستانه انفجاره.'
     }
   };
   clickables.push(supernovaStar);
@@ -1045,7 +1466,7 @@ function updateSupernova(dt) {
   if (supernovaState === 'idle' && supernovaTimer > 6) {
     supernovaState = 'explode';
     supernovaTimer = 0;
-    supernovaStar.material.color.setHex(0xffffaa);
+    supernovaStar.material.color.setHex(0xffffcc);
     supernovaParticles.material.opacity = 1;
     const arr = supernovaParticles.geometry.attributes.position.array;
     for (let i = 0; i < arr.length; i++) arr[i] = 0;
@@ -1054,9 +1475,9 @@ function updateSupernova(dt) {
     const arr = supernovaParticles.geometry.attributes.position.array;
     const vel = supernovaParticles.userData.vel;
     for (let i = 0; i < vel.length; i++) {
-      arr[i*3]     += vel[i].x * dt * 3;
-      arr[i*3+1]   += vel[i].y * dt * 3;
-      arr[i*3+2]   += vel[i].z * dt * 3;
+      arr[i*3] += vel[i].x * dt * 3;
+      arr[i*3+1] += vel[i].y * dt * 3;
+      arr[i*3+2] += vel[i].z * dt * 3;
     }
     supernovaParticles.geometry.attributes.position.needsUpdate = true;
     supernovaParticles.material.opacity = Math.max(0, 1 - supernovaTimer / 2.5);
@@ -1076,10 +1497,12 @@ function updateSupernova(dt) {
 // ============================================================
 const meteors = [];
 function createMeteors() {
-  for (let i = 0; i < 8; i++) {
+  for (let i = 0; i < 10; i++) {
     const geo = new THREE.BufferGeometry();
-    geo.setAttribute('position', new THREE.BufferAttribute(new Float32Array(20 * 3), 3));
-    const line = new THREE.Line(geo, new THREE.LineBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.9 }));
+    geo.setAttribute('position', new THREE.BufferAttribute(new Float32Array(24 * 3), 3));
+    const line = new THREE.Line(geo, new THREE.LineBasicMaterial({
+      color: 0xffffff, transparent: true, opacity: 0.9, blending: THREE.AdditiveBlending
+    }));
     scene.add(line);
     const m = { line, arr: geo.attributes.position.array, x:0, y:0, z:0, vx:0, vy:0, vz:0, life:0 };
     resetMeteor(m);
@@ -1119,16 +1542,33 @@ function updateMeteors(dt) {
 //   مأموریت‌ها
 // ============================================================
 const probes = [];
+function makeProbe(color) {
+  const g = new THREE.Group();
+  g.add(new THREE.Mesh(
+    new THREE.BoxGeometry(0.3, 0.3, 0.3),
+    new THREE.MeshStandardMaterial({ color: 0xcccccc, metalness: 0.85, roughness: 0.25 })
+  ));
+  const dish = new THREE.Mesh(
+    new THREE.CircleGeometry(0.5, 24),
+    new THREE.MeshBasicMaterial({ color: 0xffffff, side: THREE.DoubleSide, transparent: true, opacity: 0.9 })
+  );
+  dish.position.set(0, 0.3, 0);
+  dish.rotation.x = Math.PI / 2;
+  g.add(dish);
+  g.add(new THREE.PointLight(color, 0.8, 3));
+  return g;
+}
+
 function createProbes() {
   [
     { angle: 0.5, radius: 50, speed: 0.0015, outward: 0.15, color: 0xffcc44, name: 'وویجر ۱',
       info: { name:'وویجر ۱', en:'Voyager 1', color:0xffcc44,
         diameter:'۸۲۵ کیلوگرم', distance:'۲۴ میلیارد کیلومتر', year:'پرتاب ۱۹۷۷',
-        day:'—', moons:'—', temp:'—', fact:'دورترین جسم ساخته‌ی بشر از زمینه.' } },
+        day:'—', moons:'—', temp:'—', gravity:'—', fact:'دورترین جسم ساخته‌ی بشر از زمینه.' } },
     { angle: 2.5, radius: 48, speed: 0.0013, outward: 0.12, color: 0xffaa22, name: 'وویجر ۲',
       info: { name:'وویجر ۲', en:'Voyager 2', color:0xffaa22,
         diameter:'۸۲۵ کیلوگرم', distance:'۲۰ میلیارد کیلومتر', year:'پرتاب ۱۹۷۷',
-        day:'—', moons:'—', temp:'—', fact:'تنها فضاپیمایی که از کنار اورانوس و نپتون عبور کرد.' } }
+        day:'—', moons:'—', temp:'—', gravity:'—', fact:'تنها فضاپیمایی که از کنار اورانوس و نپتون عبور کرد.' } }
   ].forEach(d => {
     const p = makeProbe(d.color);
     p.userData = { ...d, isProbe: true, info: d.info };
@@ -1144,7 +1584,7 @@ function createProbes() {
     labelDivs.push(div);
   });
 
-  const saturn = clickables.find(p => p.userData.name === 'زحل');
+  const saturn = planetRefs['زحل'];
   if (saturn) {
     const cassini = makeProbe(0x88ccff);
     cassini.userData = { angle: 0, speed: 0.04, dist: 3.5, isCassini: true };
@@ -1175,7 +1615,7 @@ function createProbes() {
     info: {
       name:'جیمز وب', en:'James Webb', color:0xffcc44,
       diameter:'۶.۵ متر آینه', distance:'۱.۵ م.ک از زمین',
-      year:'پرتاب ۲۰۲۱', day:'—', moons:'—', temp:'−۲۳۳°',
+      year:'پرتاب ۲۰۲۱', day:'—', moons:'—', temp:'−۲۳۳°', gravity:'—',
       fact:'قدرتمندترین تلسکوپ فضایی ساخته‌شده.'
     }
   };
@@ -1196,10 +1636,11 @@ function createProbes() {
     info: {
       name:'آپولو ۱۱', en:'Apollo 11', color:0xffffff,
       diameter:'۴۵ تن', distance:'۳۸۴,۴۰۰ کیلومتر', year:'۱۹۶۹',
-      day:'—', moons:'—', temp:'—', fact:'اولین مأموریت فرود انسان روی ماه.'
+      day:'—', moons:'—', temp:'—', gravity:'—',
+      fact:'اولین مأموریت فرود انسان روی ماه.'
     }
   };
-  const earth = clickables.find(p => p.userData.name === 'زمین');
+  const earth = planetRefs['زمین'];
   if (earth) {
     earth.add(apollo);
     clickables.push(apollo);
@@ -1213,36 +1654,19 @@ function createProbes() {
   }
 }
 
-function makeProbe(color) {
-  const g = new THREE.Group();
-  g.add(new THREE.Mesh(
-    new THREE.BoxGeometry(0.3, 0.3, 0.3),
-    new THREE.MeshStandardMaterial({ color: 0xcccccc, metalness: 0.8, roughness: 0.3 })
-  ));
-  const dish = new THREE.Mesh(
-    new THREE.CircleGeometry(0.5, 16),
-    new THREE.MeshBasicMaterial({ color: 0xffffff, side: THREE.DoubleSide, transparent: true, opacity: 0.85 })
-  );
-  dish.position.set(0, 0.3, 0);
-  dish.rotation.x = Math.PI / 2;
-  g.add(dish);
-  g.add(new THREE.PointLight(color, 0.8, 3));
-  return g;
-}
-
 // ============================================================
 //   ISS، شفق، دنباله‌دار
 // ============================================================
 let iss;
 function createISS() {
-  const earth = clickables.find(p => p.userData.name === 'زمین');
+  const earth = planetRefs['زمین'];
   if (!earth) return;
   iss = new THREE.Group();
   iss.add(new THREE.Mesh(
     new THREE.BoxGeometry(0.15, 0.05, 0.05),
-    new THREE.MeshStandardMaterial({ color: 0xcccccc, metalness: 0.8 })
+    new THREE.MeshStandardMaterial({ color: 0xcccccc, metalness: 0.9, emissive: 0x333333 })
   ));
-  const panelMat = new THREE.MeshStandardMaterial({ color: 0x2244aa, emissive: 0x112288, emissiveIntensity: 0.4 });
+  const panelMat = new THREE.MeshStandardMaterial({ color: 0x2244aa, emissive: 0x112288, emissiveIntensity: 0.6 });
   const p1 = new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.01, 0.08), panelMat);
   p1.position.set(0.18, 0, 0);
   iss.add(p1);
@@ -1252,39 +1676,45 @@ function createISS() {
 }
 
 function createAurora() {
-  const earth = clickables.find(p => p.userData.name === 'زمین');
+  const earth = planetRefs['زمین'];
   if (!earth) return;
   const aurora = new THREE.Mesh(
-    new THREE.TorusGeometry(0.75, 0.12, 8, 32),
-    new THREE.MeshBasicMaterial({ color: 0x44ff88, transparent: true, opacity: 0.35, side: THREE.DoubleSide })
+    new THREE.TorusGeometry(0.78, 0.14, 12, 48),
+    new THREE.MeshBasicMaterial({
+      color: 0x44ff88, transparent: true, opacity: 0.45,
+      side: THREE.DoubleSide, blending: THREE.AdditiveBlending
+    })
   );
   aurora.rotation.x = Math.PI / 2;
-  aurora.position.y = 0.45;
+  aurora.position.y = 0.48;
   earth.add(aurora);
   const a2 = aurora.clone();
-  a2.position.y = -0.45;
+  a2.position.y = -0.48;
   a2.material = aurora.material.clone();
   a2.material.color.set(0x88ddff);
   earth.add(a2);
+  earth.userData.aurora = [aurora, a2];
 }
 
 let comet, cometTail;
 function createComet() {
   comet = new THREE.Mesh(
-    new THREE.SphereGeometry(0.2, 16, 16),
-    new THREE.MeshBasicMaterial({ color: 0xaaffff })
+    new THREE.SphereGeometry(0.2, 24, 24),
+    new THREE.MeshBasicMaterial({ color: 0xccefff })
   );
   comet.add(new THREE.Mesh(
-    new THREE.SphereGeometry(0.5, 16, 16),
-    new THREE.MeshBasicMaterial({ color: 0x44ddff, transparent: true, opacity: 0.4 })
+    new THREE.SphereGeometry(0.6, 24, 24),
+    new THREE.MeshBasicMaterial({ color: 0x44ddff, transparent: true, opacity: 0.35, blending: THREE.AdditiveBlending })
   ));
   scene.add(comet);
-  const L = 50;
+  const L = 60;
   const geo = new THREE.BufferGeometry();
   geo.setAttribute('position', new THREE.BufferAttribute(new Float32Array(L * 3), 3));
-  cometTail = new THREE.Line(geo, new THREE.LineBasicMaterial({ color: 0x44ddff, transparent: true, opacity: 0.7 }));
+  cometTail = new THREE.Line(geo, new THREE.LineBasicMaterial({
+    color: 0x66eeff, transparent: true, opacity: 0.8, blending: THREE.AdditiveBlending
+  }));
   scene.add(cometTail);
-  comet.userData = { a: 50, b: 34, angle: 0, speed: 0.004, tailHistory: [], tailLength: L };
+  comet.userData = { a: 52, b: 36, angle: 0, speed: 0.004, tailHistory: [], tailLength: L };
 }
 
 // ============================================================
@@ -1317,7 +1747,7 @@ renderer.domElement.addEventListener('mousedown', e => {
 });
 window.addEventListener('mouseup', () => isDown = false);
 window.addEventListener('mousemove', e => {
-  if (!isDown) return;
+  if (!isDown || fpMode.on) return;
   theta -= (e.clientX - prevX) * 0.005;
   phi -= (e.clientY - prevY) * 0.005;
   phi = Math.max(0.1, Math.min(Math.PI - 0.1, phi));
@@ -1334,7 +1764,7 @@ renderer.domElement.addEventListener('mousedown', e => {
   mouseDownPos = { x: e.clientX, y: e.clientY };
 });
 renderer.domElement.addEventListener('click', e => {
-  if (!mouseDownPos) return;
+  if (!mouseDownPos || fpMode.on) return;
   const dx = e.clientX - mouseDownPos.x;
   const dy = e.clientY - mouseDownPos.y;
   if (Math.sqrt(dx*dx + dy*dy) > 5) return;
@@ -1358,16 +1788,65 @@ function zoomToObject(obj) {
   const p = new THREE.Vector3();
   obj.getWorldPosition(p);
   camTargetX = p.x; camTargetY = p.y; camTargetZ = p.z;
-  const targetRadius = obj.userData.size ? obj.userData.size * 8 + 3 : 10;
+  const targetRadius = obj.userData.size ? obj.userData.size * 7 + 3 : 10;
   const startRadius = camRadius;
   const startTime = performance.now();
   function step() {
-    const t = Math.min(1, (performance.now() - startTime) / 800);
+    const t = Math.min(1, (performance.now() - startTime) / 900);
     const ease = 1 - Math.pow(1 - t, 3);
     camRadius = startRadius + (targetRadius - startRadius) * ease;
     if (t < 1) requestAnimationFrame(step);
   }
   step();
+}
+
+// ============================================================
+//   حالت اول‌شخص
+// ============================================================
+const fpMode = { on: false, yaw: 0, pitch: 0, keys: {}, pos: new THREE.Vector3(0, 0, 60) };
+
+document.getElementById('btnFPS').onclick = function() {
+  fpMode.on = !fpMode.on;
+  this.classList.toggle('active', fpMode.on);
+  document.getElementById('hud').classList.toggle('on', fpMode.on);
+  if (fpMode.on) {
+    followMesh = null;
+    fpMode.pos.set(camera.position.x, camera.position.y, camera.position.z);
+    fpMode.yaw = theta;
+    fpMode.pitch = Math.PI / 2 - phi;
+  }
+};
+
+window.addEventListener('keydown', e => { fpMode.keys[e.key.toLowerCase()] = true; });
+window.addEventListener('keyup', e => { fpMode.keys[e.key.toLowerCase()] = false; });
+
+document.addEventListener('mousemove', e => {
+  if (!fpMode.on || !isDown) return;
+  fpMode.yaw -= e.movementX * 0.003;
+  fpMode.pitch -= e.movementY * 0.003;
+  fpMode.pitch = Math.max(-Math.PI/2 + 0.1, Math.min(Math.PI/2 - 0.1, fpMode.pitch));
+});
+
+function updateFPS(dt) {
+  if (!fpMode.on) return;
+  const speed = (fpMode.keys['shift'] ? 30 : 12) * dt;
+  const dir = new THREE.Vector3(
+    Math.sin(fpMode.yaw) * Math.cos(fpMode.pitch),
+    Math.sin(fpMode.pitch),
+    Math.cos(fpMode.yaw) * Math.cos(fpMode.pitch)
+  );
+  const right = new THREE.Vector3(Math.cos(fpMode.yaw), 0, -Math.sin(fpMode.yaw));
+
+  if (fpMode.keys['w']) fpMode.pos.addScaledVector(dir, speed);
+  if (fpMode.keys['s']) fpMode.pos.addScaledVector(dir, -speed);
+  if (fpMode.keys['a']) fpMode.pos.addScaledVector(right, -speed);
+  if (fpMode.keys['d']) fpMode.pos.addScaledVector(right, speed);
+  if (fpMode.keys[' ']) fpMode.pos.y += speed;
+  if (fpMode.keys['control']) fpMode.pos.y -= speed;
+
+  camera.position.copy(fpMode.pos);
+  const look = fpMode.pos.clone().addScaledVector(dir, 10);
+  camera.lookAt(look);
 }
 
 // ============================================================
@@ -1390,6 +1869,7 @@ function showPlanetInfo(info, mesh) {
   document.getElementById('piDay').textContent = info.day;
   document.getElementById('piMoons').textContent = info.moons;
   document.getElementById('piTemp').textContent = info.temp;
+  document.getElementById('piGravity').textContent = info.gravity || '—';
   document.getElementById('piFact').textContent = info.fact;
   pi.classList.add('open');
   document.getElementById('piFollow').classList.toggle('active', followMesh === mesh);
@@ -1442,7 +1922,9 @@ const ACHIEVEMENTS = {
   trappist: { title: '🌌 کاشف Trappist', desc: 'منظومه Trappist-1 رو دیدی' },
   supernova: { title: '💥 شاهد انفجار', desc: 'ستاره ابرنواختر رو دیدی' },
   quizMaster: { title: '🎓 فضانورد', desc: 'آزمون رو کامل کردی' },
-  timeTraveler: { title: '⏰ مسافر زمان', desc: 'زمان رو تغییر دادی' }
+  timeTraveler: { title: '⏰ مسافر زمان', desc: 'زمان رو تغییر دادی' },
+  fpExplorer: { title: '👁️ فضانورد آزاد', desc: 'حالت اول‌شخص رو فعال کردی' },
+  saver: { title: '💾 حافظ', desc: 'وضعیت رو ذخیره کردی' }
 };
 
 const unlocked = new Set();
@@ -1497,7 +1979,8 @@ document.getElementById('btnAch').onclick = function() {
 //   دکمه‌ها
 // ============================================================
 let labelsVisible = true, orbitsVisible = true, trailsVisible = false, constellationsVisible = false;
-let soundOn = false, tourOn = false, tourTimeout = null;
+let tourOn = false, tourTimeout = null;
+let constellationGroup;
 
 document.getElementById('btnLabels').onclick = function() {
   labelsVisible = !labelsVisible;
@@ -1519,10 +2002,13 @@ document.getElementById('btnTrails').onclick = function() {
   trailLines.forEach(t => t.visible = trailsVisible);
   this.classList.toggle('active', trailsVisible);
 };
-document.getElementById('btnSound').onclick = function() {
-  soundOn = !soundOn;
-  if (soundOn) startAmbient(); else stopAmbient();
-  this.classList.toggle('active', soundOn);
+document.getElementById('btnHabitable').onclick = function() {
+  habitableZone.visible = !habitableZone.visible;
+  this.classList.toggle('active', habitableZone.visible);
+};
+document.getElementById('btnNearbyStars').onclick = function() {
+  document.getElementById('starsPanel').classList.toggle('open');
+  this.classList.toggle('active');
 };
 document.getElementById('btnSunView').onclick = () => {
   followMesh = null;
@@ -1578,10 +2064,10 @@ function nextTourStop() {
     document.getElementById('tourText').textContent = '🎥 در حال نمایش: ' + obj.userData.info.name;
   }
   tourIndex++;
-  tourTimeout = setTimeout(nextTourStop, 4500);
+  tourTimeout = setTimeout(nextTourStop, 5000);
 }
 
-// مقایسه اندازه
+// مقایسه
 document.getElementById('btnCompare').onclick = () => {
   document.getElementById('sizeCompare').classList.add('open');
   buildSizeCompare();
@@ -1650,7 +2136,6 @@ document.getElementById('btnQuiz').onclick = () => {
 document.getElementById('quizClose').onclick = () => {
   document.getElementById('quiz').classList.remove('open');
 };
-
 function renderQuiz() {
   const box = document.getElementById('quizBox');
   if (quizIndex >= QUIZ_QUESTIONS.length) {
@@ -1669,7 +2154,6 @@ function renderQuiz() {
     <div class="quiz-q">${q.q}</div>
     ${q.opts.map((o,i) => `<button class="quiz-opt" data-i="${i}">${o}</button>`).join('')}
     <div class="quiz-progress">سوال ${quizIndex+1} از ${QUIZ_QUESTIONS.length} | امتیاز: ${quizScore}</div>`;
-
   box.querySelectorAll('.quiz-opt').forEach(btn => {
     btn.onclick = () => {
       const chosen = parseInt(btn.dataset.i);
@@ -1710,12 +2194,32 @@ function applyTimeTravel(year) {
     const period = periods[mesh.userData.name] || 365;
     const baseAngle = mesh.userData.baseAngle || 0;
     mesh.userData.angle = baseAngle + (daysDiff / period) * Math.PI * 2;
-    mesh.position.x = Math.cos(mesh.userData.angle) * mesh.userData.dist;
-    mesh.position.z = Math.sin(mesh.userData.angle) * mesh.userData.dist;
   });
 }
 
-// عکس‌برداری
+// محاسبه‌گر سن
+document.getElementById('btnAge').onclick = () => {
+  document.getElementById('ageCalc').style.display = 'block';
+  updateAgeResults();
+};
+document.getElementById('ageClose').onclick = () => {
+  document.getElementById('ageCalc').style.display = 'none';
+};
+document.getElementById('ageInput').addEventListener('input', updateAgeResults);
+function updateAgeResults() {
+  const age = parseFloat(document.getElementById('ageInput').value) || 0;
+  const res = document.getElementById('ageResults');
+  const periods = { 'عطارد':0.241, 'زهره':0.615, 'زمین':1, 'مریخ':1.881, 'مشتری':11.86, 'زحل':29.46, 'اورانوس':84.01, 'نپتون':164.8 };
+  let html = '';
+  for (const [name, period] of Object.entries(periods)) {
+    const pAge = (age / period).toFixed(2);
+    html += `<div style="display:flex;justify-content:space-between;padding:6px 0;color:#ccc;font-size:12px;border-bottom:1px solid rgba(255,255,255,0.05)">
+      <span>${name}</span><span style="color:#4fc3f7;font-weight:bold">${pAge} سال</span></div>`;
+  }
+  res.innerHTML = html;
+}
+
+// عکس
 document.getElementById('btnShot').onclick = () => {
   renderer.render(scene, camera);
   const dataURL = renderer.domElement.toDataURL('image/png');
@@ -1730,28 +2234,49 @@ document.getElementById('btnShot').onclick = () => {
   setTimeout(() => t.remove(), 2500);
 };
 
-// صدا
-let audioCtx = null, audioNodes = [];
-function startAmbient() {
-  try {
-    if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-    if (audioCtx.state === 'suspended') audioCtx.resume();
-    const o1 = audioCtx.createOscillator(); o1.type = 'sine'; o1.frequency.value = 55;
-    const g1 = audioCtx.createGain(); g1.gain.value = 0.02;
-    o1.connect(g1).connect(audioCtx.destination); o1.start();
-    const o2 = audioCtx.createOscillator(); o2.type = 'sine'; o2.frequency.value = 82.5;
-    const g2 = audioCtx.createGain(); g2.gain.value = 0.012;
-    o2.connect(g2).connect(audioCtx.destination); o2.start();
-    const lfo = audioCtx.createOscillator(); lfo.frequency.value = 0.1;
-    const lfoGain = audioCtx.createGain(); lfoGain.gain.value = 0.005;
-    lfo.connect(lfoGain).connect(g1.gain); lfo.start();
-    audioNodes = [o1, o2, lfo, g1, g2, lfoGain];
-  } catch (e) {}
-}
-function stopAmbient() {
-  audioNodes.forEach(n => { try { n.stop?.(); n.disconnect?.(); } catch(_) {} });
-  audioNodes = [];
-}
+// ذخیره و بارگذاری
+document.getElementById('btnSave').onclick = () => {
+  const state = {
+    theta, phi, camRadius, camTargetX, camTargetY, camTargetZ,
+    timeScale,
+    follow: followMesh ? (followMesh.userData.name || null) : null,
+    time: Date.now()
+  };
+  localStorage.setItem('solarState', JSON.stringify(state));
+  unlock('saver');
+  const t = document.createElement('div');
+  t.className = 'ach-toast';
+  t.textContent = '💾 وضعیت ذخیره شد!';
+  document.body.appendChild(t);
+  setTimeout(() => t.remove(), 2500);
+};
+document.getElementById('btnLoad').onclick = () => {
+  const s = localStorage.getItem('solarState');
+  if (!s) {
+    const t = document.createElement('div');
+    t.className = 'ach-toast';
+    t.textContent = '❌ هیچ وضعیت ذخیره‌شده‌ای نیست';
+    document.body.appendChild(t);
+    setTimeout(() => t.remove(), 2500);
+    return;
+  }
+  const state = JSON.parse(s);
+  theta = state.theta;
+  phi = state.phi;
+  camRadius = state.camRadius;
+  camTargetX = state.camTargetX;
+  camTargetY = state.camTargetY;
+  camTargetZ = state.camTargetZ;
+  timeScale = state.timeScale || 1;
+  document.getElementById('speedSlider').value = timeScale * 10;
+  document.getElementById('speedValue').textContent = timeScale.toFixed(1) + 'x';
+  if (state.follow && planetRefs[state.follow]) followMesh = planetRefs[state.follow];
+  const t = document.createElement('div');
+  t.className = 'ach-toast';
+  t.textContent = '📂 وضعیت بارگذاری شد!';
+  document.body.appendChild(t);
+  setTimeout(() => t.remove(), 2500);
+};
 
 // سرعت زمان
 let timeScale = 1.0;
@@ -1765,6 +2290,18 @@ function updateDate() {
   const now = new Date();
   document.getElementById('dateVal').textContent = now.toLocaleDateString('fa-IR', { year: 'numeric', month: 'long', day: 'numeric' });
   document.getElementById('timeVal').textContent = now.toLocaleTimeString('fa-IR', { hour: '2-digit', minute: '2-digit' });
+}
+
+// پنل ستاره‌ها
+function buildStarsList() {
+  const list = document.getElementById('starsList');
+  list.innerHTML = '';
+  NEARBY_STARS.forEach(s => {
+    const d = document.createElement('div');
+    d.className = 'star';
+    d.innerHTML = `<b>${s.name}</b> — ${s.dist}<small>${s.type} · قدر ظاهری ${s.mag}</small>`;
+    list.appendChild(d);
+  });
 }
 
 // ============================================================
@@ -1781,14 +2318,32 @@ function animate(now) {
     sunGlow.rotation.y -= 0.001 * timeScale;
     if (sunGlow.userData.glow2) sunGlow.userData.glow2.rotation.y += 0.0008 * timeScale;
   }
+  if (corona) corona.rotation.y += 0.0004 * timeScale;
 
+  // سیارات با مکانیک کپلری
   clickables.forEach(mesh => {
     if (!mesh.userData.isPlanet) return;
     const d = mesh.userData;
     d.angle += d.speed * 0.5 * timeScale;
-    mesh.position.x = Math.cos(d.angle) * d.dist;
-    mesh.position.z = Math.sin(d.angle) * d.dist;
+    // سرعت متغیر: نزدیک خورشید سریع‌تر (قانون دوم کپلر)
+    const ecc = d.eccentricity || 0;
+    const r = d.dist * (1 - ecc*ecc) / (1 + ecc * Math.cos(d.angle));
+    mesh.position.x = Math.cos(d.angle) * r;
+    mesh.position.z = Math.sin(d.angle) * r;
+    // چرخش محوری
     mesh.rotation.y += 0.02 * timeScale;
+
+    if (d.cloudMesh) d.cloudMesh.rotation.y += 0.005 * timeScale;
+
+    // چراغ‌های شب زمین هم‌جهت با زمین می‌چرخن
+    if (d.nightLights) d.nightLights.rotation.y = 0;
+
+    // شفق
+    if (d.aurora) {
+      d.aurora[0].rotation.z += 0.005 * timeScale;
+      d.aurora[1].rotation.z -= 0.005 * timeScale;
+    }
+
     if (d.moonMeshes) {
       d.moonMeshes.forEach(moon => {
         const md = moon.userData;
@@ -1890,8 +2445,18 @@ function animate(now) {
     cometTail.geometry.setDrawRange(0, d.tailHistory.length);
   }
 
-  updateCamera();
-  renderer.render(scene, camera);
+  if (fpMode.on) {
+    updateFPS(dt);
+  } else {
+    updateCamera();
+  }
+
+  // رندر
+  if (composer && bloomPass) {
+    composer.render();
+  } else {
+    renderer.render(scene, camera);
+  }
   labelRenderer.render(scene, camera);
 }
 
@@ -1908,6 +2473,7 @@ createMoons();
 createAsteroidBelt();
 createKuiperBelt();
 createOortCloud();
+createHabitableZone();
 createBlackHole();
 createBinaryStars();
 createTrappist();
@@ -1917,6 +2483,12 @@ createProbes();
 createISS();
 createAurora();
 createComet();
+buildStarsList();
+
+// تنظیم اندازه‌ی composer
+if (composer) {
+  composer.setSize(innerWidth, innerHeight);
+}
 
 updateDate();
 setInterval(updateDate, 30000);
@@ -1928,6 +2500,7 @@ window.addEventListener('resize', () => {
   camera.updateProjectionMatrix();
   renderer.setSize(innerWidth, innerHeight);
   labelRenderer.setSize(innerWidth, innerHeight);
+  if (composer) composer.setSize(innerWidth, innerHeight);
 });
 </script>
 </body>
